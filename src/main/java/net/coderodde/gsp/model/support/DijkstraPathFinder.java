@@ -21,8 +21,65 @@ import net.coderodde.gsp.model.queue.support.DaryHeap;
  */
 public class DijkstraPathFinder extends PathFinder {
 
+    private MinimumPriorityQueue<DirectedGraphNode> OPEN;
+    private Set<DirectedGraphNode> CLOSED;
+    private Map<DirectedGraphNode, DirectedGraphNode> PARENTS;
+    private Map<DirectedGraphNode, Double> DISTANCE;
+    private DirectedGraphNode target;
+    private DirectedGraphWeightFunction weightFunction;
+    
     public DijkstraPathFinder() {
         setQueue(new DaryHeap<>(2));
+    }
+    
+    private DijkstraPathFinder(DirectedGraphNode source,
+                               DirectedGraphNode target,
+                               DirectedGraphWeightFunction weightFunction) {
+        OPEN = getQueue() == null ? new DaryHeap<>() : getQueue().spawn();
+        CLOSED = new HashSet<>();
+        PARENTS = new HashMap<>();
+        DISTANCE = new HashMap<>();
+        
+        OPEN.add(source, 0.0);
+        PARENTS.put(source, null);
+        DISTANCE.put(source, 0.0);
+        
+        this.target = target;
+        this.weightFunction = weightFunction;
+    }
+    
+    private void expand(DirectedGraphNode current) {
+        for (DirectedGraphNode child : current.children()) {
+            if (!CLOSED.contains(child)) {
+                double tentativeCost = DISTANCE.get(current) + 
+                                       weightFunction.get(current, child);
+
+                if (!DISTANCE.containsKey(child)) {
+                    DISTANCE.put(child, tentativeCost);
+                    PARENTS.put(child, current);
+                    OPEN.add(child, tentativeCost);
+                } else if (DISTANCE.get(child) > tentativeCost) {
+                    DISTANCE.put(child, tentativeCost);
+                    PARENTS.put(child, current);
+                    OPEN.decreasePriority(child, tentativeCost);
+                }
+            }
+        }
+    }
+    
+    private List<DirectedGraphNode> search() {
+        while (!OPEN.isEmpty()) {
+            DirectedGraphNode current = OPEN.extractMinimum();
+            
+            if (current.equals(target)) {
+                return tracebackPath(current, PARENTS);
+            }
+            
+            CLOSED.add(current);
+            expand(current);
+        }
+            
+        return Collections.<DirectedGraphNode>emptyList();
     }
     
     @Override
@@ -34,44 +91,6 @@ public class DijkstraPathFinder extends PathFinder {
         Objects.requireNonNull(target, "The target node is null.");
         Objects.requireNonNull(weightFunction, "The weight function is null.");
             
-        MinimumPriorityQueue<DirectedGraphNode> OPEN = getQueue() == null ?
-                                                       new DaryHeap<>() :
-                                                       getQueue().spawn();
-        Set<DirectedGraphNode> CLOSED = new HashSet<>();
-        Map<DirectedGraphNode, DirectedGraphNode> parentMap = new HashMap<>();
-        Map<DirectedGraphNode, Double> distanceMap = new HashMap<>();
-        
-        OPEN.add(source, 0.0);
-        parentMap.put(source, null);
-        distanceMap.put(source, 0.0);
-        
-        while (!OPEN.isEmpty()) {
-            DirectedGraphNode current = OPEN.extractMinimum();
-            
-            if (current.equals(target)) {
-                return tracebackPath(current, parentMap);
-            }
-            
-            CLOSED.add(current);
-            
-            for (DirectedGraphNode child : current.children()) {
-                if (!CLOSED.contains(child)) {
-                    double tentativeCost = distanceMap.get(current) + 
-                                           weightFunction.get(current, child);
-                    
-                    if (!distanceMap.containsKey(child)) {
-                        distanceMap.put(child, tentativeCost);
-                        parentMap.put(child, current);
-                        OPEN.add(child, tentativeCost);
-                    } else if (distanceMap.get(child) > tentativeCost) {
-                        distanceMap.put(child, tentativeCost);
-                        parentMap.put(child, current);
-                        OPEN.decreasePriority(child, tentativeCost);
-                    }
-                }
-            }
-        }
-        
-        return Collections.<DirectedGraphNode>emptyList();
+        return new DijkstraPathFinder(source, target, weightFunction).search();
     }
 }
