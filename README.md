@@ -7,6 +7,8 @@ My aim is to come up with a definitive collection of pathfinding algorithms + mi
 - [x] Dijkstra's algorithm
 - [x] Bidirectional Dijkstra's algorithm
 - [x] A*
+- [x] Bidirectional A*
+- [x] New Bidirectional A* (NBA*) by Henk Post and Wim Pijls
 
 ### Priority queues 
 
