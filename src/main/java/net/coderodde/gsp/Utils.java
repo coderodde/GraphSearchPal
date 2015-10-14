@@ -41,7 +41,7 @@ public class Utils {
     public static final class GraphData {
         public List<DirectedGraphNode> graph;
         public DirectedGraphWeightFunction weightFunction;
-        public HeuristicFunction heuristicFunction;
+        public GraphHeuristicFunction heuristicFunction;
     }
     
     public static GraphData getRandomGraphData(int nodes,
@@ -83,6 +83,10 @@ public class Utils {
 
         private final Map<DirectedGraphNode, Point2D.Double> map =
                 new HashMap<>();
+        
+        public Point2D.Double get(DirectedGraphNode node) {
+            return map.get(node);
+        }
         
         void put(DirectedGraphNode node, Point2D.Double point) {
             map.put(node, point);

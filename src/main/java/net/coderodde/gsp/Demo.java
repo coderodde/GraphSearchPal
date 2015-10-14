@@ -1,6 +1,7 @@
 package net.coderodde.gsp;
 
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Random;
 import net.coderodde.gsp.Utils.GraphData;
@@ -94,8 +95,10 @@ public class Demo {
         
         GraphData data2 = getRandomGraphData(1_000_000, 4_000_000, random);
         
-        source = choose(data2.graph, random);
-        target = choose(data2.graph, random);
+//        source = choose(data2.graph, random);
+//        target = choose(data2.graph, random);
+        source = getSource(data2);
+        target = getTarget(data2);
         
         System.out.println("Source: " + source);
         System.out.println("Target: " + target);
@@ -152,6 +155,50 @@ public class Demo {
                            (endTime - startTime) + " milliseconds.");
         System.out.println("Path length: " + 
                 getPathLength(path5, data2.weightFunction));
+    }
+    
+    private static DirectedGraphNode getSource(GraphData data) {
+        DirectedGraphNode node = data.graph.get(0);
+        
+        double x = data.heuristicFunction.get(node).x;
+        double y = data.heuristicFunction.get(node).y;
+        
+        Point2D.Double origin = new Point2D.Double(0.0, 0.0);
+        Point2D.Double tmp = new Point2D.Double(x, y);
+        
+        for (DirectedGraphNode n : data.graph) {
+            Point2D.Double p = data.heuristicFunction.get(n);
+            
+            if (p.distance(origin) < tmp.distance(origin)) {
+                tmp.x = p.x;
+                tmp.y = p.y;
+                node = n;
+            }
+        }
+        
+        return node;
+    }
+    
+    private static DirectedGraphNode getTarget(GraphData data) {
+        DirectedGraphNode node = data.graph.get(0);
+        
+        double x = data.heuristicFunction.get(node).x;
+        double y = data.heuristicFunction.get(node).y;
+        
+        Point2D.Double origin = new Point2D.Double(0.0, 0.0);
+        Point2D.Double tmp = new Point2D.Double(x, y);
+        
+        for (DirectedGraphNode n : data.graph) {
+            Point2D.Double p = data.heuristicFunction.get(n);
+            
+            if (p.distance(origin) > tmp.distance(origin)) {
+                tmp.x = p.x;
+                tmp.y = p.y;
+                node = n;
+            }
+        }
+        
+        return node;
     }
     
     private static DirectedGraphNode getRandomNode(DirectedGraphNode[][] grid,
