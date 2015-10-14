@@ -23,15 +23,12 @@ public abstract class PathFinder {
      * 
      * @param source         the source node.
      * @param target         the target node.
-     * @param weightFunction the weight function of the graph being searched.
      * @return a list of nodes constituting the shortest path from 
      *         {@code source} to {@code target}, or an empty list if 
      *         {@code target} is not reachable from {@code source}.
      */
-    public abstract List<DirectedGraphNode> 
-        search(DirectedGraphNode source, 
-               DirectedGraphNode target,
-               DirectedGraphWeightFunction weightFunction);
+    public abstract List<DirectedGraphNode> search(DirectedGraphNode source, 
+                                                   DirectedGraphNode target);
        
     public MinimumPriorityQueue<DirectedGraphNode> getQueue() {
         return queue;

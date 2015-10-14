@@ -9,11 +9,12 @@ import java.util.Objects;
 import java.util.Set;
 import net.coderodde.gsp.model.DirectedGraphNode;
 import net.coderodde.gsp.model.DirectedGraphWeightFunction;
+import net.coderodde.gsp.model.HeuristicFunction;
 import net.coderodde.gsp.model.PathFinder;
 import net.coderodde.gsp.model.queue.MinimumPriorityQueue;
 import net.coderodde.gsp.model.queue.support.DaryHeap;
 
-public class BidirectionalDijkstraPathFinder extends PathFinder {
+public class BidirectionalAStarPathFinder extends PathFinder {
     
     private MinimumPriorityQueue<DirectedGraphNode> OPENA;
     private MinimumPriorityQueue<DirectedGraphNode> OPENB;
@@ -31,20 +32,26 @@ public class BidirectionalDijkstraPathFinder extends PathFinder {
     private DirectedGraphNode target;
     
     private final DirectedGraphWeightFunction weightFunction;
+    private final HeuristicFunction heuristicFunction;
     
     private double bestPathLength;
     private DirectedGraphNode touchNode;
     
-    public BidirectionalDijkstraPathFinder(
-            DirectedGraphWeightFunction weightFunction) {
+    public BidirectionalAStarPathFinder(
+            DirectedGraphWeightFunction weightFunction,
+            HeuristicFunction heuristicFunction) {
         Objects.requireNonNull(weightFunction, "The weight function is null.");
+        Objects.requireNonNull(heuristicFunction, 
+                               "The heuristic function is null.");
         this.weightFunction = weightFunction;
+        this.heuristicFunction = heuristicFunction;
     }
         
-    private BidirectionalDijkstraPathFinder(
+    private BidirectionalAStarPathFinder(
             DirectedGraphNode source,
             DirectedGraphNode target,
-            DirectedGraphWeightFunction weightFunction) {
+            DirectedGraphWeightFunction weightFunction,
+            HeuristicFunction heuristicFunction) {
         OPENA = getQueue() == null ? new DaryHeap<>() : getQueue().spawn();
         OPENB = OPENA.spawn();
         
@@ -60,6 +67,7 @@ public class BidirectionalDijkstraPathFinder extends PathFinder {
         this.source = source;
         this.target = target;
         this.weightFunction = weightFunction;
+        this.heuristicFunction = heuristicFunction;
         
         this.bestPathLength = Double.POSITIVE_INFINITY;
         this.touchNode = null;
@@ -71,9 +79,10 @@ public class BidirectionalDijkstraPathFinder extends PathFinder {
         Objects.requireNonNull(source, "The source node is null.");
         Objects.requireNonNull(target, "The target node is null.");
         
-        return new BidirectionalDijkstraPathFinder(source, 
-                                                   target,
-                                                   weightFunction).search();
+        return new BidirectionalAStarPathFinder(source, 
+                                                target,
+                                                weightFunction,
+                                                heuristicFunction).search();
     }
     
     private void updateForwardFrontier(DirectedGraphNode node,
@@ -112,12 +121,16 @@ public class BidirectionalDijkstraPathFinder extends PathFinder {
                 if (!DISTANCEA.containsKey(child)) {
                     DISTANCEA.put(child, tentativeScore);
                     PARENTSA.put(child, current);
-                    OPENA.add(child, tentativeScore);
+                    OPENA.add(child, 
+                              tentativeScore + heuristicFunction
+                              .estimate(child, target));
                     updateForwardFrontier(child, tentativeScore);
                 } else if (DISTANCEA.get(child) > tentativeScore) {
                     DISTANCEA.put(child, tentativeScore);
                     PARENTSA.put(child, current);
-                    OPENA.decreasePriority(child, tentativeScore);
+                    OPENA.decreasePriority(child,
+                                           tentativeScore + heuristicFunction
+                                           .estimate(child, target));
                     updateForwardFrontier(child, tentativeScore);
                 }
             }
@@ -136,12 +149,16 @@ public class BidirectionalDijkstraPathFinder extends PathFinder {
                 if (!DISTANCEB.containsKey(parent)) {
                     DISTANCEB.put(parent, tentativeScore);
                     PARENTSB.put(parent, current);
-                    OPENB.add(parent, tentativeScore);
+                    OPENB.add(parent, 
+                              tentativeScore + heuristicFunction
+                              .estimate(parent, source));
                     updateBackwardFrontier(parent, tentativeScore);
                 } else if (DISTANCEB.get(parent) > tentativeScore) {
                     DISTANCEB.put(parent, tentativeScore);
                     PARENTSB.put(parent, current);
-                    OPENB.decreasePriority(parent, tentativeScore);
+                    OPENB.decreasePriority(parent, 
+                                           tentativeScore + heuristicFunction
+                                           .estimate(parent, source));
                     updateBackwardFrontier(parent, tentativeScore);
                 }
             }
@@ -159,11 +176,19 @@ public class BidirectionalDijkstraPathFinder extends PathFinder {
         DISTANCEB.put(target, 0.0);
         
         while (!OPENA.isEmpty() && !OPENB.isEmpty()) {
-            double mtmp = DISTANCEA.get(OPENA.min()) +
-                          DISTANCEB.get(OPENB.min());
-            
-            if (mtmp >= bestPathLength) {
-                return tracebackPath(touchNode, PARENTSA, PARENTSB);
+            if (touchNode != null) {
+                DirectedGraphNode minA = OPENA.min();
+                DirectedGraphNode minB = OPENB.min();
+                
+                double distanceA = DISTANCEA.get(minA) + 
+                                   heuristicFunction.estimate(minA, target);
+                
+                double distanceB = DISTANCEB.get(minB) + 
+                                   heuristicFunction.estimate(minB, source);
+                
+                if (bestPathLength <= Math.min(distanceA, distanceB)) {
+                    return tracebackPath(touchNode, PARENTSA, PARENTSB);
+                }
             }
             
             if (OPENA.size() + CLOSEDA.size() < 

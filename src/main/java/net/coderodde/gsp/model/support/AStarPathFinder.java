@@ -22,71 +22,88 @@ import net.coderodde.gsp.model.queue.support.DaryHeap;
  */
 public class AStarPathFinder extends PathFinder {
 
-    private HeuristicFunction heuristicFunction;
+    private MinimumPriorityQueue<DirectedGraphNode> OPEN;
+    private Set<DirectedGraphNode> CLOSED;
+    private Map<DirectedGraphNode, DirectedGraphNode> PARENTS;
+    private Map<DirectedGraphNode, Double> DISTANCE;
+    private DirectedGraphNode target;
+    
+    private final DirectedGraphWeightFunction weightFunction;
+    private final HeuristicFunction heuristicFunction;
     private MinimumPriorityQueue<DirectedGraphNode> queue;
     
-    public AStarPathFinder(HeuristicFunction heuristicFunction,
-                       MinimumPriorityQueue<DirectedGraphNode> queue) {
+    public AStarPathFinder(DirectedGraphWeightFunction weightFunction,
+                           HeuristicFunction heuristicFunction) {
+        Objects.requireNonNull(weightFunction, "The weight function is null.");
+        Objects.requireNonNull(heuristicFunction,
+                               "The heuristic function is null.");
+        this.weightFunction = weightFunction;
         this.heuristicFunction = heuristicFunction;
-        this.queue = queue;
-    }
-    
-    public AStarPathFinder(HeuristicFunction heuristicFunction) {
-        this(heuristicFunction, null);
     }
     
     @Override
-    public List<DirectedGraphNode> 
-        search(DirectedGraphNode source, 
-               DirectedGraphNode target, 
-               DirectedGraphWeightFunction weightFunction) {
+    public List<DirectedGraphNode> search(DirectedGraphNode source, 
+                                          DirectedGraphNode target) {
         Objects.requireNonNull(source, "The source node is null.");
         Objects.requireNonNull(target, "The target node is null.");
-        Objects.requireNonNull(weightFunction, "The weight function is null.");
-            
-        MinimumPriorityQueue<DirectedGraphNode> OPEN = getQueue() == null ?
-                                                       new DaryHeap<>() :
-                                                       getQueue().spawn();
-        Set<DirectedGraphNode> CLOSED = new HashSet<>();
-        Map<DirectedGraphNode, DirectedGraphNode> parentMap = new HashMap<>();
-        Map<DirectedGraphNode, Double> distanceMap = new HashMap<>();
+        
+        return new AStarPathFinder(source, 
+                                   target, 
+                                   weightFunction, 
+                                   heuristicFunction).search();
+    }
+
+    private AStarPathFinder(DirectedGraphNode source,
+                            DirectedGraphNode target,
+                            DirectedGraphWeightFunction weightFunction,
+                            HeuristicFunction heuristicFunction) {
+        OPEN = getQueue() == null ? new DaryHeap<>() : getQueue().spawn();
+        CLOSED = new HashSet<>();
+        PARENTS = new HashMap<>();
+        DISTANCE = new HashMap<>();
         
         OPEN.add(source, heuristicFunction.estimate(source, target));
-        parentMap.put(source, null);
-        distanceMap.put(source, 0.0);
+        PARENTS.put(source, null);
+        DISTANCE.put(source, 0.0);
         
+        this.target = target;
+        this.weightFunction = weightFunction;
+        this.heuristicFunction = heuristicFunction;
+    }
+    
+    private void expand(DirectedGraphNode current) {
+        for (DirectedGraphNode child : current.children()) {
+            if (!CLOSED.contains(child)) {
+                double tentativeCost = DISTANCE.get(current) + 
+                                       weightFunction.get(current, child);
+
+                if (!DISTANCE.containsKey(child)) {
+                    DISTANCE.put(child, tentativeCost);
+                    PARENTS.put(child, current);
+                    OPEN.add(child, tentativeCost + 
+                            heuristicFunction.estimate(child, target));
+                } else if (DISTANCE.get(child) > tentativeCost) {
+                    DISTANCE.put(child, tentativeCost);
+                    PARENTS.put(child, current);
+                    OPEN.decreasePriority(child, tentativeCost +
+                            heuristicFunction.estimate(child, target));
+                }
+            }
+        }
+    }
+    
+    private List<DirectedGraphNode> search() {
         while (!OPEN.isEmpty()) {
             DirectedGraphNode current = OPEN.extractMinimum();
             
             if (current.equals(target)) {
-                return tracebackPath(current, parentMap);
+                return tracebackPath(current, PARENTS);
             }
             
             CLOSED.add(current);
+            expand(current);
+        }
             
-            for (DirectedGraphNode child : current.children()) {
-                if (!CLOSED.contains(child)) {
-                    double tentativeCost = distanceMap.get(current) + 
-                                           weightFunction.get(current, child);
-                    
-                    if (!distanceMap.containsKey(child)) {
-                        distanceMap.put(child, tentativeCost);
-                        parentMap.put(child, current);
-                        OPEN.add(child, 
-                                 tentativeCost + 
-                                 heuristicFunction.estimate(child, target));
-                    } else if (distanceMap.get(child) > tentativeCost) {
-                        distanceMap.put(child, tentativeCost);
-                        parentMap.put(child, current);
-                        OPEN.decreasePriority(
-                                child, 
-                                tentativeCost +
-                                heuristicFunction.estimate(child, target));
-                    }
-                }
-            }
-        }
-        
-        return Collections.<DirectedGraphNode>emptyList();    
-        }
+        return Collections.<DirectedGraphNode>emptyList();
+    }
 }

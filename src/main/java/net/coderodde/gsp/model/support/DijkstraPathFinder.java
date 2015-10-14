@@ -26,10 +26,11 @@ public class DijkstraPathFinder extends PathFinder {
     private Map<DirectedGraphNode, DirectedGraphNode> PARENTS;
     private Map<DirectedGraphNode, Double> DISTANCE;
     private DirectedGraphNode target;
-    private DirectedGraphWeightFunction weightFunction;
+    private final DirectedGraphWeightFunction weightFunction;
     
-    public DijkstraPathFinder() {
-        setQueue(new DaryHeap<>(2));
+    public DijkstraPathFinder(DirectedGraphWeightFunction weightFunction) {
+        Objects.requireNonNull(weightFunction, "The weight function is null.");
+        this.weightFunction = weightFunction;
     }
     
     private DijkstraPathFinder(DirectedGraphNode source,
@@ -83,14 +84,10 @@ public class DijkstraPathFinder extends PathFinder {
     }
     
     @Override
-    public List<DirectedGraphNode> 
-        search(DirectedGraphNode source, 
-               DirectedGraphNode target, 
-               DirectedGraphWeightFunction weightFunction) {
+    public List<DirectedGraphNode> search(DirectedGraphNode source, 
+                                          DirectedGraphNode target) {
         Objects.requireNonNull(source, "The source node is null.");
         Objects.requireNonNull(target, "The target node is null.");
-        Objects.requireNonNull(weightFunction, "The weight function is null.");
-            
         return new DijkstraPathFinder(source, target, weightFunction).search();
     }
 }
