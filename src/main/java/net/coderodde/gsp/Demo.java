@@ -3,7 +3,10 @@ package net.coderodde.gsp;
 import java.awt.Point;
 import java.util.List;
 import java.util.Random;
+import net.coderodde.gsp.Utils.GraphData;
+import static net.coderodde.gsp.Utils.choose;
 import static net.coderodde.gsp.Utils.getPathLength;
+import static net.coderodde.gsp.Utils.getRandomGraphData;
 import net.coderodde.gsp.model.DirectedGraphNode;
 import net.coderodde.gsp.model.DirectedGraphWeightFunction;
 import net.coderodde.gsp.model.support.AStarPathFinder;
@@ -86,6 +89,69 @@ public class Demo {
                            (endTime - startTime) + " milliseconds.");
         System.out.println("Path length: " + 
                 getPathLength(path5, data.weightFunction));
+        
+        System.out.println("---");
+        
+        GraphData data2 = getRandomGraphData(50000, 300000, random);
+        
+        source = choose(data2.graph, random);
+        target = choose(data2.graph, random);
+        
+        System.out.println("Source: " + source);
+        System.out.println("Target: " + target);
+        
+        startTime = System.currentTimeMillis();
+        path1 = new DijkstraPathFinder(data2.weightFunction).search(source, 
+                                                                   target);
+        endTime = System.currentTimeMillis();
+        
+        System.out.println("DijkstraPathFinder in " + (endTime - startTime) +
+                           " milliseconds.");
+        System.out.println("Path length: " + 
+                getPathLength(path1, data2.weightFunction));
+        
+        startTime = System.currentTimeMillis();
+        path2 = new BidirectionalDijkstraPathFinder(data2.weightFunction)
+                        .search(source, target);
+        endTime = System.currentTimeMillis();
+        
+        System.out.println("BidirectionalDijkstraPathFinder in " + 
+                           (endTime - startTime) + " milliseconds.");
+        System.out.println("Path length: " + 
+                getPathLength(path2, data2.weightFunction));
+        
+        startTime = System.currentTimeMillis();
+        path3 = new AStarPathFinder(data2.weightFunction, 
+                                    data2.heuristicFunction).search(source,
+                                                                    target);
+        endTime = System.currentTimeMillis();
+        
+        System.out.println("AStarPathFinder in " + 
+                           (endTime - startTime) + " milliseconds.");
+        System.out.println("Path length: " + 
+                getPathLength(path3, data2.weightFunction));
+        
+        startTime = System.currentTimeMillis();
+        path4 = new BidirectionalAStarPathFinder(
+                        data2.weightFunction, 
+                        data2.heuristicFunction).search(source, target);
+        endTime = System.currentTimeMillis();
+        
+        System.out.println("BidirectionalAStarPathFinder in " + 
+                           (endTime - startTime) + " milliseconds.");
+        System.out.println("Path length: " + 
+                getPathLength(path4, data2.weightFunction));
+        
+        startTime = System.currentTimeMillis();
+        path5 = new NewBidirectionalAStarPathFinder(
+                        data2.weightFunction, 
+                        data2.heuristicFunction).search(source, target);
+        endTime = System.currentTimeMillis();
+        
+        System.out.println("NewBidirectionalAStarPathFinder in " + 
+                           (endTime - startTime) + " milliseconds.");
+        System.out.println("Path length: " + 
+                getPathLength(path5, data2.weightFunction));
     }
     
     private static DirectedGraphNode getRandomNode(DirectedGraphNode[][] grid,
