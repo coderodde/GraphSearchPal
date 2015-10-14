@@ -1,5 +1,6 @@
 package net.coderodde.gsp.model.support;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -166,6 +167,14 @@ public class BidirectionalAStarPathFinder extends PathFinder {
     }
     
     private List<DirectedGraphNode> search() {
+        if (source.equals(target)) {
+            // Bidirectional search algorithms cannont handle the case where
+            // source and target nodes are same.
+            List<DirectedGraphNode> path = new ArrayList<>(1);
+            path.add(source);
+            return path;
+        }
+        
         OPENA.add(source, 0.0);
         OPENB.add(target, 0.0);
         
@@ -186,7 +195,7 @@ public class BidirectionalAStarPathFinder extends PathFinder {
                 double distanceB = DISTANCEB.get(minB) + 
                                    heuristicFunction.estimate(minB, source);
                 
-                if (bestPathLength <= Math.min(distanceA, distanceB)) {
+                if (bestPathLength <= Math.max(distanceA, distanceB)) {
                     return tracebackPath(touchNode, PARENTSA, PARENTSB);
                 }
             }

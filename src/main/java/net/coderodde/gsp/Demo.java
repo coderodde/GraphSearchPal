@@ -3,6 +3,7 @@ package net.coderodde.gsp;
 import java.awt.Point;
 import java.util.List;
 import java.util.Random;
+import static net.coderodde.gsp.Utils.getPathLength;
 import net.coderodde.gsp.model.DirectedGraphNode;
 import net.coderodde.gsp.model.DirectedGraphWeightFunction;
 import net.coderodde.gsp.model.support.AStarPathFinder;
@@ -78,22 +79,6 @@ public class Demo {
                                                    Random random) {
         return grid[random.nextInt(grid.length)]
                    [random.nextInt(grid[0].length)];
-    }
-    
-    private static double 
-        getPathLength(List<DirectedGraphNode> path,
-                      DirectedGraphWeightFunction weightFunction) {
-        double length = 0.0;
-        
-        for (int i = 0; i < path.size() - 1; ++i) {
-            if (!path.get(i).hasChild(path.get(i + 1))) {
-                return Double.NaN;
-            }
-            
-            length += weightFunction.get(path.get(i), path.get(i + 1));
-        }
-        
-        return length;
     }
     
     private static final class GridGraphData {

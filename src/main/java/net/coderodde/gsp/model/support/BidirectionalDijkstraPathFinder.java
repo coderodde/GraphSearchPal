@@ -1,5 +1,6 @@
 package net.coderodde.gsp.model.support;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -149,6 +150,14 @@ public class BidirectionalDijkstraPathFinder extends PathFinder {
     }
     
     private List<DirectedGraphNode> search() {
+        if (source.equals(target)) {
+            // Bidirectional search algorithms cannont handle the case where
+            // source and target nodes are same.
+            List<DirectedGraphNode> path = new ArrayList<>(1);
+            path.add(source);
+            return path;
+        }
+        
         OPENA.add(source, 0.0);
         OPENB.add(target, 0.0);
         
