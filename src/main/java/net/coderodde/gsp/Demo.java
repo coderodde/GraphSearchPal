@@ -20,7 +20,7 @@ import net.coderodde.gsp.model.support.NewBidirectionalAStarPathFinder;
 public class Demo {
 
     public static void main(String[] args) {
-        long seed = 1444815199366L; //System.currentTimeMillis();
+        long seed = System.currentTimeMillis();
         Random random = new Random(seed);
         GridGraphData data = createGridGraph(700, 700);
         DirectedGraphNode source = getRandomNode(data.graph, random);

@@ -10,6 +10,7 @@ import net.coderodde.gsp.model.support.AStarPathFinder;
 import net.coderodde.gsp.model.support.BidirectionalAStarPathFinder;
 import net.coderodde.gsp.model.support.BidirectionalDijkstraPathFinder;
 import net.coderodde.gsp.model.support.DijkstraPathFinder;
+import net.coderodde.gsp.model.support.NewBidirectionalAStarPathFinder;
 import org.junit.Test;
 import static net.coderodde.gsp.Utils.getPathLength;
 import static org.junit.Assert.*;
@@ -18,11 +19,11 @@ public class PathFinderTest {
     
     @Test
     public void test() {
-        long seed = 1444808340163L; System.currentTimeMillis();
+        long seed = System.currentTimeMillis();
         Random random = new Random(seed);
         GraphData data = getRandomGraphData(10, 40, random);
         
-        PathFinder[] finders = new PathFinder[4];
+        PathFinder[] finders = new PathFinder[5];
         
         finders[0] = new DijkstraPathFinder(data.weightFunction);
         finders[1] = new BidirectionalDijkstraPathFinder(data.weightFunction);
@@ -30,6 +31,9 @@ public class PathFinderTest {
                                          data.heuristicFunction);
         finders[3] = new BidirectionalAStarPathFinder(data.weightFunction,  
                                                       data.heuristicFunction);
+        finders[4] = 
+                new NewBidirectionalAStarPathFinder(data.weightFunction,
+                                                    data.heuristicFunction);
         
         System.out.println("PathFinderTest, seed = " + seed);
         
