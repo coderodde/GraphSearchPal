@@ -38,9 +38,6 @@ public class PathFinderTest {
             DirectedGraphNode source = choose(data.graph, random);
             DirectedGraphNode target = choose(data.graph, random);
             
-            System.out.println("Source: " + source);
-            System.out.println("Target: " + target);
-            
             for (int j = 0; j < finders.length; ++j) {
                 paths[j] = finders[j].search(source, target);
             }
@@ -48,7 +45,6 @@ public class PathFinderTest {
             double pathLength = getPathLength(paths[0], data.weightFunction);
             
             for (int j = 1; j < finders.length; ++j) {
-                System.out.println("j = " + j);
                 assertEquals(pathLength, 
                              getPathLength(paths[j], data.weightFunction),
                              0.0001);

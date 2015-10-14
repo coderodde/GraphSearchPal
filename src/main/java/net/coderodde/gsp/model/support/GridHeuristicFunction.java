@@ -26,7 +26,7 @@ public class GridHeuristicFunction implements HeuristicFunction {
         Point sourcePoint = map.get(source);
         Point targetPoint = map.get(target);
         
-        int dx = Math.abs(sourcePoint.x - targetPoint.y);
+        int dx = Math.abs(sourcePoint.x - targetPoint.x);
         int dy = Math.abs(sourcePoint.y - targetPoint.y);
         
         return Math.min(dx, dy) * SQRT2 + Math.max(dx, dy) - Math.min(dx, dy);

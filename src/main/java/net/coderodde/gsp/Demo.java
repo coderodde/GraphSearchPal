@@ -11,6 +11,7 @@ import net.coderodde.gsp.model.support.BidirectionalAStarPathFinder;
 import net.coderodde.gsp.model.support.BidirectionalDijkstraPathFinder;
 import net.coderodde.gsp.model.support.DijkstraPathFinder;
 import net.coderodde.gsp.model.support.GridHeuristicFunction;
+import net.coderodde.gsp.model.support.NewBidirectionalAStarPathFinder;
 
 /**
  *
@@ -19,7 +20,7 @@ import net.coderodde.gsp.model.support.GridHeuristicFunction;
 public class Demo {
 
     public static void main(String[] args) {
-        long seed = System.currentTimeMillis();
+        long seed = 1444815199366L; //System.currentTimeMillis();
         Random random = new Random(seed);
         GridGraphData data = createGridGraph(700, 700);
         DirectedGraphNode source = getRandomNode(data.graph, random);
@@ -72,7 +73,19 @@ public class Demo {
         System.out.println("BidirectionalAStarPathFinder in " + 
                            (endTime - startTime) + " milliseconds.");
         System.out.println("Path length: " + 
-                getPathLength(path3, data.weightFunction));
+                getPathLength(path4, data.weightFunction));
+        
+        startTime = System.currentTimeMillis();
+        List<DirectedGraphNode> path5 = 
+                new NewBidirectionalAStarPathFinder(
+                        data.weightFunction, 
+                        data.heuristicFunction).search(source, target);
+        endTime = System.currentTimeMillis();
+        
+        System.out.println("NewBidirectionalAStarPathFinder in " + 
+                           (endTime - startTime) + " milliseconds.");
+        System.out.println("Path length: " + 
+                getPathLength(path5, data.weightFunction));
     }
     
     private static DirectedGraphNode getRandomNode(DirectedGraphNode[][] grid,
@@ -92,6 +105,7 @@ public class Demo {
         DirectedGraphWeightFunction weightFunction 
                 = new DirectedGraphWeightFunction();
         GridHeuristicFunction heuristicFunction = new GridHeuristicFunction();
+        
         Point point = new Point();
         
         for (int y = 0; y < height; ++y) {

@@ -200,7 +200,7 @@ public class BidirectionalAStarPathFinder extends PathFinder {
                 }
             }
             
-            if (OPENA.size() + CLOSEDA.size() < 
+            if (OPENA.size() + CLOSEDA.size() <
                 OPENB.size() + CLOSEDB.size()) {
                 expandForwardFrontier();
             } else {
