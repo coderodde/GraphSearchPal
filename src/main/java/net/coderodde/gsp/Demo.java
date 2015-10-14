@@ -25,7 +25,7 @@ public class Demo {
     public static void main(String[] args) {
         long seed = System.currentTimeMillis();
         Random random = new Random(seed);
-        GridGraphData data = createGridGraph(700, 700);
+        GridGraphData data = createGridGraph(200, 200);
         DirectedGraphNode source = getRandomNode(data.graph, random);
         DirectedGraphNode target = getRandomNode(data.graph, random);
         System.out.println("Seed: " + seed);
@@ -92,7 +92,7 @@ public class Demo {
         
         System.out.println("---");
         
-        GraphData data2 = getRandomGraphData(50000, 300000, random);
+        GraphData data2 = getRandomGraphData(1_000_000, 4_000_000, random);
         
         source = choose(data2.graph, random);
         target = choose(data2.graph, random);

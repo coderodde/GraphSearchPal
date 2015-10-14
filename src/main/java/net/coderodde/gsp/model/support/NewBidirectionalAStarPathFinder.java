@@ -72,144 +72,132 @@ public class NewBidirectionalAStarPathFinder extends PathFinder {
         DISTANCEA.put(source, 0.0);
         DISTANCEB.put(target, 0.0);
         
-        while (true) {
-            if (OPENA.isEmpty()) {
-                break;
-            }
-            
-            DirectedGraphNode current = OPENA.extractMinimum();
-            CLOSED.add(current);
-            
-            if (DISTANCEA.get(current) + 
-                    heuristicFunction.estimate(current, target) -
-                    heuristicFunction.estimate(target, target) 
-                    >= bestPathLength
-                    ||
-                    DISTANCEA.get(current) + fB 
-                    - heuristicFunction.estimate(current, source)
-                    >= bestPathLength) {
-                // Reject the node 'current'.
-            } else {
-                // Stabilize the node 'current'.
-                for (DirectedGraphNode child : current.children()) {
-                    if (CLOSED.contains(child)) {
-                        continue;
-                    }
-                    
-                    double tentativeScore = DISTANCEA.get(current) +
-                                            weightFunction.get(current, child);
-                    
-                    if (!DISTANCEA.containsKey(child)) {
-                        DISTANCEA.put(child, tentativeScore);
-                        PARENTSA.put(child, current);
-                        OPENA.add(child, 
-                                  tentativeScore +
-                                  heuristicFunction.estimate(child, target));
-                        
-                        if (DISTANCEB.containsKey(child)) {
-                            double pathLength = tentativeScore +
-                                                DISTANCEB.get(child);
-                            
-                            if (bestPathLength > pathLength) {
-                                bestPathLength = pathLength;
-                                touchNode = child;
-                            }
+        while (!OPENA.isEmpty() && !OPENB.isEmpty()) {
+            if (OPENA.size() < OPENB.size()) {   
+                DirectedGraphNode current = OPENA.extractMinimum();
+                CLOSED.add(current);
+
+                if (DISTANCEA.get(current) + 
+                        heuristicFunction.estimate(current, target) -
+                        heuristicFunction.estimate(target, target) 
+                        >= bestPathLength
+                        ||
+                        DISTANCEA.get(current) + fB 
+                        - heuristicFunction.estimate(current, source)
+                        >= bestPathLength) {
+                    // Reject the node 'current'.
+                } else {
+                    // Stabilize the node 'current'.
+                    for (DirectedGraphNode child : current.children()) {
+                        if (CLOSED.contains(child)) {
+                            continue;
                         }
-                    } else if (DISTANCEA.get(child) > tentativeScore) {
-                        DISTANCEA.put(child, tentativeScore);
-                        PARENTSA.put(child, current);
-                        OPENA.decreasePriority(
-                                child,
-                                tentativeScore +
-                                heuristicFunction.estimate(child, target));
-                        
-                        if (DISTANCEB.containsKey(child)) {
-                            double pathLength = tentativeScore +
-                                                DISTANCEB.get(child);
-                            
-                            if (bestPathLength > pathLength) {
-                                bestPathLength = pathLength;
-                                touchNode = child;
+
+                        double tentativeScore = DISTANCEA.get(current) +
+                                                weightFunction.get(current, child);
+
+                        if (!DISTANCEA.containsKey(child)) {
+                            DISTANCEA.put(child, tentativeScore);
+                            PARENTSA.put(child, current);
+                            OPENA.add(child, 
+                                      tentativeScore +
+                                      heuristicFunction.estimate(child, target));
+
+                            if (DISTANCEB.containsKey(child)) {
+                                double pathLength = tentativeScore +
+                                                    DISTANCEB.get(child);
+
+                                if (bestPathLength > pathLength) {
+                                    bestPathLength = pathLength;
+                                    touchNode = child;
+                                }
                             }
-                        }
-                    }
-                }
-            }
-            
-            if (!OPENA.isEmpty()) {
-                DirectedGraphNode node = OPENA.min();
-                fA = DISTANCEA.get(node) + heuristicFunction.estimate(node, 
-                                                                      target);
-            }
-            
-            if (OPENB.isEmpty()) {
-                break;
-            }
-            
-            current = OPENB.extractMinimum();
-            CLOSED.add(current);
-            
-            if (DISTANCEB.get(current) + 
-                    heuristicFunction.estimate(current, source) -
-                    heuristicFunction.estimate(source, source) 
-                    >= bestPathLength
-                    ||
-                    DISTANCEB.get(current) + fA 
-                    - heuristicFunction.estimate(current, target)
-                    >= bestPathLength) {
-                // Reject the node 'current'.
-            } else {
-                // Stabilize the node 'current'.
-                for (DirectedGraphNode parent : current.parents()) {
-                    if (CLOSED.contains(parent)) {
-                        continue;
-                    }
-                    
-                    double tentativeScore = DISTANCEB.get(current) +
-                                            weightFunction.get(parent,
-                                                               current);
-                    
-                    if (!DISTANCEB.containsKey(parent)) {
-                        DISTANCEB.put(parent, tentativeScore);
-                        PARENTSB.put(parent, current);
-                        OPENB.add(parent, 
-                                  tentativeScore +
-                                  heuristicFunction.estimate(parent, source));
-                        
-                        if (DISTANCEA.containsKey(parent)) {
-                            double pathLength = tentativeScore +
-                                                DISTANCEA.get(parent);
-                            
-                            if (bestPathLength > pathLength) {
-                                bestPathLength = pathLength;
-                                touchNode = parent;
-                            }
-                        }
-                    } else if (DISTANCEB.get(parent) > tentativeScore) {
-                        DISTANCEB.put(parent, tentativeScore);
-                        PARENTSB.put(parent, current);
-                        OPENB.decreasePriority(
-                                parent,
-                                tentativeScore +
-                                heuristicFunction.estimate(parent, source));
-                        
-                        if (DISTANCEA.containsKey(parent)) {
-                            double pathLength = tentativeScore +
-                                                DISTANCEA.get(parent);
-                            
-                            if (bestPathLength > pathLength) {
-                                bestPathLength = pathLength;
-                                touchNode = parent;
+                        } else if (DISTANCEA.get(child) > tentativeScore) {
+                            DISTANCEA.put(child, tentativeScore);
+                            PARENTSA.put(child, current);
+                            OPENA.decreasePriority(
+                                    child,
+                                    tentativeScore +
+                                    heuristicFunction.estimate(child, target));
+
+                            if (DISTANCEB.containsKey(child)) {
+                                double pathLength = tentativeScore +
+                                                    DISTANCEB.get(child);
+
+                                if (bestPathLength > pathLength) {
+                                    bestPathLength = pathLength;
+                                    touchNode = child;
+                                }
                             }
                         }
                     }
                 }
-            }
-            
-            if (!OPENB.isEmpty()) {
-                DirectedGraphNode node = OPENB.min();
-                fB = DISTANCEB.get(node) + heuristicFunction.estimate(node, 
-                                                                      source);
+
+                if (!OPENA.isEmpty()) {
+                    DirectedGraphNode node = OPENA.min();
+                    fA = DISTANCEA.get(node) + heuristicFunction.estimate(node, 
+                                                                          target);
+                }
+            } else {
+                DirectedGraphNode current = OPENB.extractMinimum();
+                CLOSED.add(current);
+
+                if (DISTANCEB.get(current) + 
+                        heuristicFunction.estimate(current, source) -
+                        heuristicFunction.estimate(source, source) 
+                        >= bestPathLength
+                        ||
+                        DISTANCEB.get(current) + fA 
+                        - heuristicFunction.estimate(current, target)
+                        >= bestPathLength) {
+                    // Reject the node 'current'.
+                } else {
+                    // Stabilize the node 'current'.
+                    for (DirectedGraphNode parent : current.parents()) {
+                        if (CLOSED.contains(parent)) {
+                            continue;
+                        }
+
+                        double tentativeScore = DISTANCEB.get(current) +
+                                                weightFunction.get(parent,
+                                                                   current);
+
+                        if (!DISTANCEB.containsKey(parent)) {
+                            DISTANCEB.put(parent, tentativeScore);
+                            PARENTSB.put(parent, current);
+                            OPENB.add(parent, 
+                                      tentativeScore +
+                                      heuristicFunction.estimate(parent, source));
+
+                            if (DISTANCEA.containsKey(parent)) {
+                                double pathLength = tentativeScore +
+                                                    DISTANCEA.get(parent);
+
+                                if (bestPathLength > pathLength) {
+                                    bestPathLength = pathLength;
+                                    touchNode = parent;
+                                }
+                            }
+                        } else if (DISTANCEB.get(parent) > tentativeScore) {
+                            DISTANCEB.put(parent, tentativeScore);
+                            PARENTSB.put(parent, current);
+                            OPENB.decreasePriority(
+                                    parent,
+                                    tentativeScore +
+                                    heuristicFunction.estimate(parent, source));
+
+                            if (DISTANCEA.containsKey(parent)) {
+                                double pathLength = tentativeScore +
+                                                    DISTANCEA.get(parent);
+
+                                if (bestPathLength > pathLength) {
+                                    bestPathLength = pathLength;
+                                    touchNode = parent;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         
