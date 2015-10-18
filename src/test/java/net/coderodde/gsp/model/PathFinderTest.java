@@ -1,5 +1,6 @@
 package net.coderodde.gsp.model;
 
+import net.coderodde.gsp.model.support.DirectedGraphNode;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ public class PathFinderTest {
         Random random = new Random(seed);
         GraphData data = getRandomGraphData(10, 40, random);
         
-        PathFinder[] finders = new PathFinder[5];
+        AbstractPathFinder[] finders = new AbstractPathFinder[5];
         
         finders[0] = new DijkstraPathFinder(data.weightFunction);
         finders[1] = new BidirectionalDijkstraPathFinder(data.weightFunction);

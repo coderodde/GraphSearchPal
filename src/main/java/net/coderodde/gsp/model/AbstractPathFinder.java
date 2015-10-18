@@ -1,5 +1,6 @@
 package net.coderodde.gsp.model;
 
+import net.coderodde.gsp.model.support.DirectedGraphNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,10 +13,11 @@ import net.coderodde.gsp.model.queue.MinimumPriorityQueue;
  * 
  * @author Rodion "rodde" Efremov
  * @version 1.6 (Oct 13, 2015)
+ * @param <N>
  */
-public abstract class PathFinder {
+public abstract class AbstractPathFinder<N extends AbstractGraphNode<N>> {
     
-    protected MinimumPriorityQueue<DirectedGraphNode> queue;
+    protected MinimumPriorityQueue<N> queue;
     
     /**
      * Performs a shortest path search from {@code source} to {@code target} 
@@ -27,15 +29,15 @@ public abstract class PathFinder {
      *         {@code source} to {@code target}, or an empty list if 
      *         {@code target} is not reachable from {@code source}.
      */
-    public abstract List<DirectedGraphNode> search(DirectedGraphNode source, 
-                                                   DirectedGraphNode target);
+    public abstract List<N> search(N source, N target);
        
-    public MinimumPriorityQueue<DirectedGraphNode> getQueue() {
+    public MinimumPriorityQueue<N> getQueue() {
         return queue;
     }
         
-    public void setQueue(MinimumPriorityQueue<DirectedGraphNode> queue) {
+    public AbstractPathFinder<N> setQueue(MinimumPriorityQueue<N> queue) {
         this.queue = queue;
+        return this;
     }
         
     /**
@@ -46,19 +48,18 @@ public abstract class PathFinder {
      * @param parentsB the parent map in backward search.
      * @return a shortest path.
      */
-    public List<DirectedGraphNode> 
-        tracebackPath(DirectedGraphNode touch,
-                      Map<DirectedGraphNode, DirectedGraphNode> parentsA,
-                      Map<DirectedGraphNode, DirectedGraphNode> parentsB) {
-        DirectedGraphNode current = touch;
-        List<DirectedGraphNode> path = new ArrayList<>();
+    public List<N> tracebackPath(N touch,
+                                 Map<N, N> parentsA, 
+                                 Map<N, N> parentsB) {
+        N current = touch;
+        List<N> path = new ArrayList<>();
         
         while (current != null) {
             path.add(current);
             current = parentsA.get(current);
         }
         
-        Collections.<DirectedGraphNode>reverse(path);
+        Collections.<N>reverse(path);
         
         if (parentsB != null) {
             current = parentsB.get(touch);
@@ -79,9 +80,7 @@ public abstract class PathFinder {
      * @param parents the parent map.
      * @return a shortest path.
      */
-    public List<DirectedGraphNode> 
-        tracebackPath(DirectedGraphNode target,
-                      Map<DirectedGraphNode, DirectedGraphNode> parents) {
+    public List<N> tracebackPath(N target, Map<N, N> parents) {
         return tracebackPath(target, parents, null);
     }
 }

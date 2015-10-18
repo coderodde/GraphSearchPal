@@ -8,8 +8,10 @@ import net.coderodde.gsp.Utils.GraphData;
 import static net.coderodde.gsp.Utils.choose;
 import static net.coderodde.gsp.Utils.getPathLength;
 import static net.coderodde.gsp.Utils.getRandomGraphData;
-import net.coderodde.gsp.model.DirectedGraphNode;
-import net.coderodde.gsp.model.DirectedGraphWeightFunction;
+import net.coderodde.gsp.model.support.DirectedGraphNode;
+import net.coderodde.gsp.model.support.DirectedGraphWeightFunction;
+import net.coderodde.gsp.model.queue.MinimumPriorityQueue;
+import net.coderodde.gsp.model.queue.support.FibonacciHeap;
 import net.coderodde.gsp.model.support.AStarPathFinder;
 import net.coderodde.gsp.model.support.BidirectionalAStarPathFinder;
 import net.coderodde.gsp.model.support.BidirectionalDijkstraPathFinder;
@@ -24,7 +26,7 @@ import net.coderodde.gsp.model.support.NewBidirectionalAStarPathFinder;
 public class Demo {
 
     public static void main(String[] args) {
-        long seed = System.currentTimeMillis();
+        long seed = 1444896432999L; System.currentTimeMillis();
         Random random = new Random(seed);
         GridGraphData data = createGridGraph(200, 200);
         DirectedGraphNode source = getRandomNode(data.graph, random);
@@ -92,20 +94,20 @@ public class Demo {
                 getPathLength(path5, data.weightFunction));
         
         System.out.println("---");
-        
+        MinimumPriorityQueue<DirectedGraphNode> queue = new FibonacciHeap<>();
         GraphData data2 = getRandomGraphData(1_000_000, 4_000_000, random);
         
-//        source = choose(data2.graph, random);
-//        target = choose(data2.graph, random);
-        source = getSource(data2);
-        target = getTarget(data2);
+        source = choose(data2.graph, random);
+        target = choose(data2.graph, random);
+//        source = getSource(data2);
+//        target = getTarget(data2);
         
         System.out.println("Source: " + source);
         System.out.println("Target: " + target);
         
         startTime = System.currentTimeMillis();
-        path1 = new DijkstraPathFinder(data2.weightFunction).search(source, 
-                                                                   target);
+        path1 = new DijkstraPathFinder(data2.weightFunction)
+                    .setQueue(null).search(source, target);
         endTime = System.currentTimeMillis();
         
         System.out.println("DijkstraPathFinder in " + (endTime - startTime) +
@@ -115,7 +117,7 @@ public class Demo {
         
         startTime = System.currentTimeMillis();
         path2 = new BidirectionalDijkstraPathFinder(data2.weightFunction)
-                        .search(source, target);
+                    .setQueue(null).search(source, target);
         endTime = System.currentTimeMillis();
         
         System.out.println("BidirectionalDijkstraPathFinder in " + 
@@ -125,8 +127,8 @@ public class Demo {
         
         startTime = System.currentTimeMillis();
         path3 = new AStarPathFinder(data2.weightFunction, 
-                                    data2.heuristicFunction).search(source,
-                                                                    target);
+                                    data2.heuristicFunction)
+                    .setQueue(null).search(source, target);
         endTime = System.currentTimeMillis();
         
         System.out.println("AStarPathFinder in " + 
@@ -137,7 +139,8 @@ public class Demo {
         startTime = System.currentTimeMillis();
         path4 = new BidirectionalAStarPathFinder(
                         data2.weightFunction, 
-                        data2.heuristicFunction).search(source, target);
+                        data2.heuristicFunction)
+                    .setQueue(null).search(source, target);
         endTime = System.currentTimeMillis();
         
         System.out.println("BidirectionalAStarPathFinder in " + 
@@ -148,7 +151,8 @@ public class Demo {
         startTime = System.currentTimeMillis();
         path5 = new NewBidirectionalAStarPathFinder(
                         data2.weightFunction, 
-                        data2.heuristicFunction).search(source, target);
+                        data2.heuristicFunction)
+                    .setQueue(null).search(source, target);
         endTime = System.currentTimeMillis();
         
         System.out.println("NewBidirectionalAStarPathFinder in " + 

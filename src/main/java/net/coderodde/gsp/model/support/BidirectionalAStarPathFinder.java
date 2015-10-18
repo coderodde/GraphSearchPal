@@ -8,39 +8,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import net.coderodde.gsp.model.DirectedGraphNode;
-import net.coderodde.gsp.model.DirectedGraphWeightFunction;
-import net.coderodde.gsp.model.HeuristicFunction;
-import net.coderodde.gsp.model.PathFinder;
+import net.coderodde.gsp.model.AbstractGraphNode;
+import net.coderodde.gsp.model.AbstractGraphWeightFunction;
+import net.coderodde.gsp.model.AbstractHeuristicFunction;
+import net.coderodde.gsp.model.AbstractPathFinder;
 import net.coderodde.gsp.model.queue.MinimumPriorityQueue;
 import net.coderodde.gsp.model.queue.support.DaryHeap;
 
-public class BidirectionalAStarPathFinder extends PathFinder {
+public class BidirectionalAStarPathFinder<N extends AbstractGraphNode<N>> 
+extends AbstractPathFinder<N> {
     
-    private MinimumPriorityQueue<DirectedGraphNode> OPENA;
-    private MinimumPriorityQueue<DirectedGraphNode> OPENB;
+    private MinimumPriorityQueue<N> OPENA;
+    private MinimumPriorityQueue<N> OPENB;
     
-    private Set<DirectedGraphNode> CLOSEDA;
-    private Set<DirectedGraphNode> CLOSEDB;
+    private Set<N> CLOSEDA;
+    private Set<N> CLOSEDB;
     
-    private Map<DirectedGraphNode, DirectedGraphNode> PARENTSA;
-    private Map<DirectedGraphNode, DirectedGraphNode> PARENTSB;
+    private Map<N, N> PARENTSA;
+    private Map<N, N> PARENTSB;
     
-    private Map<DirectedGraphNode, Double> DISTANCEA;
-    private Map<DirectedGraphNode, Double> DISTANCEB;
+    private Map<N, Double> DISTANCEA;
+    private Map<N, Double> DISTANCEB;
     
-    private DirectedGraphNode source;
-    private DirectedGraphNode target;
+    private N source;
+    private N target;
     
-    private final DirectedGraphWeightFunction weightFunction;
-    private final HeuristicFunction heuristicFunction;
+    private final AbstractGraphWeightFunction<N> weightFunction;
+    private final AbstractHeuristicFunction<N> heuristicFunction;
     
     private double bestPathLength;
-    private DirectedGraphNode touchNode;
+    private N touchNode;
     
     public BidirectionalAStarPathFinder(
-            DirectedGraphWeightFunction weightFunction,
-            HeuristicFunction heuristicFunction) {
+            AbstractGraphWeightFunction<N> weightFunction,
+            AbstractHeuristicFunction<N> heuristicFunction) {
         Objects.requireNonNull(weightFunction, "The weight function is null.");
         Objects.requireNonNull(heuristicFunction, 
                                "The heuristic function is null.");
@@ -49,10 +50,10 @@ public class BidirectionalAStarPathFinder extends PathFinder {
     }
         
     private BidirectionalAStarPathFinder(
-            DirectedGraphNode source,
-            DirectedGraphNode target,
-            DirectedGraphWeightFunction weightFunction,
-            HeuristicFunction heuristicFunction) {
+            N source,
+            N target,
+            AbstractGraphWeightFunction<N> weightFunction,
+            AbstractHeuristicFunction<N> heuristicFunction) {
         OPENA = getQueue() == null ? new DaryHeap<>() : getQueue().spawn();
         OPENB = OPENA.spawn();
         
@@ -75,8 +76,7 @@ public class BidirectionalAStarPathFinder extends PathFinder {
     }
     
     @Override
-    public List<DirectedGraphNode> search(DirectedGraphNode source, 
-                                          DirectedGraphNode target) {
+    public List<N> search(N source, N target) {
         Objects.requireNonNull(source, "The source node is null.");
         Objects.requireNonNull(target, "The target node is null.");
         
@@ -86,8 +86,7 @@ public class BidirectionalAStarPathFinder extends PathFinder {
                                                 heuristicFunction).search();
     }
     
-    private void updateForwardFrontier(DirectedGraphNode node,
-                                       double nodeScore) {
+    private void updateForwardFrontier(N node, double nodeScore) {
         if (CLOSEDB.contains(node)) {
             double pathLength = DISTANCEB.get(node) + nodeScore;
             
@@ -98,8 +97,7 @@ public class BidirectionalAStarPathFinder extends PathFinder {
         }
     }
     
-    private void updateBackwardFrontier(DirectedGraphNode node,
-                                        double nodeScore) {
+    private void updateBackwardFrontier(N node, double nodeScore) {
         if (CLOSEDA.contains(node)) {
             double pathLength = DISTANCEA.get(node) + nodeScore;
             
@@ -111,10 +109,10 @@ public class BidirectionalAStarPathFinder extends PathFinder {
     }
     
     private void expandForwardFrontier() {
-        DirectedGraphNode current = OPENA.extractMinimum();
+        N current = OPENA.extractMinimum();
         CLOSEDA.add(current);
         
-        for (DirectedGraphNode child : current.children()) {
+        for (N child : current.children()) {
             if (!CLOSEDA.contains(child)) {
                 double tentativeScore = DISTANCEA.get(current) + 
                                         weightFunction.get(current, child);
@@ -139,10 +137,10 @@ public class BidirectionalAStarPathFinder extends PathFinder {
     }
     
     private void expandBackwardFrontier() {
-        DirectedGraphNode current = OPENB.extractMinimum();
+        N current = OPENB.extractMinimum();
         CLOSEDB.add(current);
         
-        for (DirectedGraphNode parent : current.parents()) {
+        for (N parent : current.parents()) {
             if (!CLOSEDB.contains(parent)) {
                 double tentativeScore = DISTANCEB.get(current) + 
                                         weightFunction.get(parent, current);
@@ -166,11 +164,11 @@ public class BidirectionalAStarPathFinder extends PathFinder {
         }
     }
     
-    private List<DirectedGraphNode> search() {
+    private List<N> search() {
         if (source.equals(target)) {
             // Bidirectional search algorithms cannont handle the case where
             // source and target nodes are same.
-            List<DirectedGraphNode> path = new ArrayList<>(1);
+            List<N> path = new ArrayList<>(1);
             path.add(source);
             return path;
         }
@@ -186,8 +184,8 @@ public class BidirectionalAStarPathFinder extends PathFinder {
         
         while (!OPENA.isEmpty() && !OPENB.isEmpty()) {
             if (touchNode != null) {
-                DirectedGraphNode minA = OPENA.min();
-                DirectedGraphNode minB = OPENB.min();
+                N minA = OPENA.min();
+                N minB = OPENB.min();
                 
                 double distanceA = DISTANCEA.get(minA) + 
                                    heuristicFunction.estimate(minA, target);
@@ -208,6 +206,6 @@ public class BidirectionalAStarPathFinder extends PathFinder {
             }
         }
         
-        return Collections.<DirectedGraphNode>emptyList();
+        return Collections.<N>emptyList();
     }
 }

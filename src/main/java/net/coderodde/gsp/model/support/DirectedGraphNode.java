@@ -1,9 +1,9 @@
-package net.coderodde.gsp.model;
+package net.coderodde.gsp.model.support;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.Objects;
 import java.util.Set;
+import net.coderodde.gsp.model.AbstractGraphNode;
 
 /**
  * This class implements a directed graph node.
@@ -11,9 +11,7 @@ import java.util.Set;
  * @author Rodion "rodde" Efremov
  * @version 1.6 (Oct 13, 2015)
  */
-public class DirectedGraphNode {
-    
-    private final String name;
+public class DirectedGraphNode extends AbstractGraphNode<DirectedGraphNode> {
     
     private final Set<DirectedGraphNode> children;
     private final Set<DirectedGraphNode> parents;
@@ -22,8 +20,7 @@ public class DirectedGraphNode {
     private final Set<DirectedGraphNode> parentWrapper;
     
     public DirectedGraphNode(String name) {
-        Objects.requireNonNull(name, "The node name is null.");
-        this.name = name;
+        super(name);
         
         this.children = new LinkedHashSet<>();
         this.parents  = new LinkedHashSet<>();
@@ -32,43 +29,35 @@ public class DirectedGraphNode {
         this.parentWrapper   = Collections.unmodifiableSet(parents);
     }
     
+    @Override
     public void addChild(DirectedGraphNode child) {
         children.add(child);
         child.parents.add(this);
     }
     
+    @Override
     public boolean hasChild(DirectedGraphNode childCandidate) {
         return children.contains(childCandidate);
     }
     
+    @Override
     public Set<DirectedGraphNode> children() {
         return childrenWrapper;
     }
     
+    @Override
     public Set<DirectedGraphNode> parents() {
         return parentWrapper;
     }
     
     @Override
-    public int hashCode() {
-        return name.hashCode();
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if (o == null) {
-            return false;
-        }
-        
-        if (!getClass().equals(o.getClass())) {
-            return false;
-        }
-        
-        return name.equals(((DirectedGraphNode) o).name);
-    }
-    
-    @Override
     public String toString() {
         return "[" + name + "]";
+    }
+
+    @Override
+    public void removeChild(DirectedGraphNode child) {
+        child.parents.remove(this);
+        children.remove(child);
     }
 }

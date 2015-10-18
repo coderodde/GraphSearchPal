@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import net.coderodde.gsp.model.DirectedGraphNode;
-import net.coderodde.gsp.model.DirectedGraphWeightFunction;
-import net.coderodde.gsp.model.HeuristicFunction;
-import net.coderodde.gsp.model.PathFinder;
+import net.coderodde.gsp.model.AbstractGraphNode;
+import net.coderodde.gsp.model.AbstractGraphWeightFunction;
+import net.coderodde.gsp.model.AbstractHeuristicFunction;
+import net.coderodde.gsp.model.AbstractPathFinder;
 import net.coderodde.gsp.model.queue.MinimumPriorityQueue;
 import net.coderodde.gsp.model.queue.support.DaryHeap;
 
@@ -22,14 +22,15 @@ import net.coderodde.gsp.model.queue.support.DaryHeap;
  * @author Rodion "rodde" Efremov
  * @version 1.6 (Oct 14, 2015)
  */
-public class NewBidirectionalAStarPathFinder extends PathFinder {
+public class NewBidirectionalAStarPathFinder<N extends AbstractGraphNode<N>> 
+extends AbstractPathFinder<N> {
 
-    private DirectedGraphWeightFunction weightFunction;
-    private HeuristicFunction heuristicFunction;
+    private AbstractGraphWeightFunction<N> weightFunction;
+    private AbstractHeuristicFunction<N> heuristicFunction;
     
     public NewBidirectionalAStarPathFinder(
-            DirectedGraphWeightFunction weightFunction,
-            HeuristicFunction heuristicFunction) {
+            AbstractGraphWeightFunction<N> weightFunction,
+            AbstractHeuristicFunction<N> heuristicFunction) {
         Objects.requireNonNull(weightFunction, "The weight function is null.");
         Objects.requireNonNull(heuristicFunction,
                                "The heuristic function is null.");
@@ -38,32 +39,31 @@ public class NewBidirectionalAStarPathFinder extends PathFinder {
     }
     
     @Override
-    public List<DirectedGraphNode> search(DirectedGraphNode source, 
-                                          DirectedGraphNode target) {
+    public List<N> search(N source, N target) {
         Objects.requireNonNull(source, "The source node is null.");
         Objects.requireNonNull(target, "The target node is null.");
         
         if (source.equals(target)) {
-            List<DirectedGraphNode> path = new ArrayList<>(1);
+            List<N> path = new ArrayList<>(1);
             path.add(source);
             return path;
         }
         
-        MinimumPriorityQueue<DirectedGraphNode> OPENA = 
-                getQueue() != null ? 
-                getQueue().spawn() :
-                new DaryHeap<>();
-        MinimumPriorityQueue<DirectedGraphNode> OPENB = OPENA.spawn();
-        Set<DirectedGraphNode> CLOSED = new HashSet<>();
-        Map<DirectedGraphNode, DirectedGraphNode> PARENTSA = new HashMap<>();
-        Map<DirectedGraphNode, DirectedGraphNode> PARENTSB = new HashMap<>();
-        Map<DirectedGraphNode, Double> DISTANCEA = new HashMap<>();
-        Map<DirectedGraphNode, Double> DISTANCEB = new HashMap<>();
+        MinimumPriorityQueue<N> OPENA = getQueue() != null ? 
+                                        getQueue().spawn() :
+                                        new DaryHeap<>();
+        
+        MinimumPriorityQueue<N> OPENB = OPENA.spawn();
+        Set<N> CLOSED = new HashSet<>();
+        Map<N, N> PARENTSA = new HashMap<>();
+        Map<N, N> PARENTSB = new HashMap<>();
+        Map<N, Double> DISTANCEA = new HashMap<>();
+        Map<N, Double> DISTANCEB = new HashMap<>();
         
         double bestPathLength = Double.POSITIVE_INFINITY;
-        DirectedGraphNode touchNode = null;
         double fA = heuristicFunction.estimate(source, target);
         double fB = heuristicFunction.estimate(target, source);
+        N touchNode = null;
         
         OPENA.add(source, fA);
         OPENB.add(target, fB);
@@ -74,7 +74,7 @@ public class NewBidirectionalAStarPathFinder extends PathFinder {
         
         while (!OPENA.isEmpty() && !OPENB.isEmpty()) {
             if (OPENA.size() < OPENB.size()) {   
-                DirectedGraphNode current = OPENA.extractMinimum();
+                N current = OPENA.extractMinimum();
                 CLOSED.add(current);
 
                 if (DISTANCEA.get(current) + 
@@ -88,7 +88,7 @@ public class NewBidirectionalAStarPathFinder extends PathFinder {
                     // Reject the node 'current'.
                 } else {
                     // Stabilize the node 'current'.
-                    for (DirectedGraphNode child : current.children()) {
+                    for (N child : current.children()) {
                         if (CLOSED.contains(child)) {
                             continue;
                         }
@@ -134,12 +134,12 @@ public class NewBidirectionalAStarPathFinder extends PathFinder {
                 }
 
                 if (!OPENA.isEmpty()) {
-                    DirectedGraphNode node = OPENA.min();
+                    N node = OPENA.min();
                     fA = DISTANCEA.get(node) + heuristicFunction.estimate(node, 
                                                                           target);
                 }
             } else {
-                DirectedGraphNode current = OPENB.extractMinimum();
+                N current = OPENB.extractMinimum();
                 CLOSED.add(current);
 
                 if (DISTANCEB.get(current) + 
@@ -153,7 +153,7 @@ public class NewBidirectionalAStarPathFinder extends PathFinder {
                     // Reject the node 'current'.
                 } else {
                     // Stabilize the node 'current'.
-                    for (DirectedGraphNode parent : current.parents()) {
+                    for (N parent : current.parents()) {
                         if (CLOSED.contains(parent)) {
                             continue;
                         }
@@ -202,7 +202,7 @@ public class NewBidirectionalAStarPathFinder extends PathFinder {
         }
         
         return touchNode == null ?
-                Collections.<DirectedGraphNode>emptyList() :
+                Collections.<N>emptyList() :
                 tracebackPath(touchNode, PARENTSA, PARENTSB);
     }
 }

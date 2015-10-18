@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import net.coderodde.gsp.model.DirectedGraphNode;
-import net.coderodde.gsp.model.DirectedGraphWeightFunction;
-import net.coderodde.gsp.model.PathFinder;
+import net.coderodde.gsp.model.AbstractGraphNode;
+import net.coderodde.gsp.model.AbstractGraphWeightFunction;
+import net.coderodde.gsp.model.AbstractPathFinder;
 import net.coderodde.gsp.model.queue.MinimumPriorityQueue;
 import net.coderodde.gsp.model.queue.support.DaryHeap;
 
@@ -18,24 +18,26 @@ import net.coderodde.gsp.model.queue.support.DaryHeap;
  * 
  * @author Rodion "rodde" Efremov
  * @version 1.6 (Oct 13, 2015)
+ * @param <N> the actual graph node type.
  */
-public class DijkstraPathFinder extends PathFinder {
+public class DijkstraPathFinder<N extends AbstractGraphNode<N>> 
+extends AbstractPathFinder<N> {
 
-    private MinimumPriorityQueue<DirectedGraphNode> OPEN;
-    private Set<DirectedGraphNode> CLOSED;
-    private Map<DirectedGraphNode, DirectedGraphNode> PARENTS;
-    private Map<DirectedGraphNode, Double> DISTANCE;
-    private DirectedGraphNode target;
-    private final DirectedGraphWeightFunction weightFunction;
+    private MinimumPriorityQueue<N> OPEN;
+    private Set<N> CLOSED;
+    private Map<N, N> PARENTS;
+    private Map<N, Double> DISTANCE;
+    private N target;
+    private final AbstractGraphWeightFunction<N> weightFunction;
     
-    public DijkstraPathFinder(DirectedGraphWeightFunction weightFunction) {
+    public DijkstraPathFinder(AbstractGraphWeightFunction<N> weightFunction) {
         Objects.requireNonNull(weightFunction, "The weight function is null.");
         this.weightFunction = weightFunction;
     }
     
-    private DijkstraPathFinder(DirectedGraphNode source,
-                               DirectedGraphNode target,
-                               DirectedGraphWeightFunction weightFunction) {
+    private DijkstraPathFinder(N source,
+                               N target,
+                               AbstractGraphWeightFunction<N> weightFunction) {
         OPEN = getQueue() == null ? new DaryHeap<>() : getQueue().spawn();
         CLOSED = new HashSet<>();
         PARENTS = new HashMap<>();
@@ -49,8 +51,8 @@ public class DijkstraPathFinder extends PathFinder {
         this.weightFunction = weightFunction;
     }
     
-    private void expand(DirectedGraphNode current) {
-        for (DirectedGraphNode child : current.children()) {
+    private void expand(N current) {
+        for (N child : current.children()) {
             if (!CLOSED.contains(child)) {
                 double tentativeCost = DISTANCE.get(current) + 
                                        weightFunction.get(current, child);
@@ -68,9 +70,9 @@ public class DijkstraPathFinder extends PathFinder {
         }
     }
     
-    private List<DirectedGraphNode> search() {
+    private List<N> search() {
         while (!OPEN.isEmpty()) {
-            DirectedGraphNode current = OPEN.extractMinimum();
+            N current = OPEN.extractMinimum();
             
             if (current.equals(target)) {
                 return tracebackPath(current, PARENTS);
@@ -80,12 +82,11 @@ public class DijkstraPathFinder extends PathFinder {
             expand(current);
         }
             
-        return Collections.<DirectedGraphNode>emptyList();
+        return Collections.<N>emptyList();
     }
     
     @Override
-    public List<DirectedGraphNode> search(DirectedGraphNode source, 
-                                          DirectedGraphNode target) {
+    public List<N> search(N source, N target) {
         Objects.requireNonNull(source, "The source node is null.");
         Objects.requireNonNull(target, "The target node is null.");
         return new DijkstraPathFinder(source, target, weightFunction).search();

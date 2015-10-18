@@ -7,10 +7,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import net.coderodde.gsp.model.DirectedGraphNode;
-import net.coderodde.gsp.model.DirectedGraphWeightFunction;
-import net.coderodde.gsp.model.HeuristicFunction;
-import net.coderodde.gsp.model.PathFinder;
+import net.coderodde.gsp.model.AbstractGraphNode;
+import net.coderodde.gsp.model.AbstractGraphWeightFunction;
+import net.coderodde.gsp.model.AbstractHeuristicFunction;
+import net.coderodde.gsp.model.AbstractPathFinder;
 import net.coderodde.gsp.model.queue.MinimumPriorityQueue;
 import net.coderodde.gsp.model.queue.support.DaryHeap;
 
@@ -20,18 +20,21 @@ import net.coderodde.gsp.model.queue.support.DaryHeap;
  * 
  * @author Rodion "rodde" Efremov
  * @version 1.6 (Oct 14, 2015)
+ * @param <N> the actual graph node type.
  */
-public class ParallelNewBidirectionalAStarPathFinder extends PathFinder {
+public class ParallelNewBidirectionalAStarPathFinder
+<N extends AbstractGraphNode<N>> 
+extends AbstractPathFinder<N> {
 
-    private final DirectedGraphWeightFunction weightFunction;
-    private final HeuristicFunction heuristicFunction;
+    private final AbstractGraphWeightFunction<N> weightFunction;
+    private final AbstractHeuristicFunction<N> heuristicFunction;
     
-    private DirectedGraphNode source;
-    private DirectedGraphNode target;
+    private N source;
+    private N target;
     
     public ParallelNewBidirectionalAStarPathFinder(
-            DirectedGraphWeightFunction weightFunction,
-            HeuristicFunction heuristicFunction) {
+            AbstractGraphWeightFunction<N> weightFunction,
+            AbstractHeuristicFunction<N> heuristicFunction) {
         Objects.requireNonNull(weightFunction, "The weight function is null.");
         Objects.requireNonNull(heuristicFunction,
                                "The heuristic function is null.");
@@ -40,10 +43,10 @@ public class ParallelNewBidirectionalAStarPathFinder extends PathFinder {
     }
     
     private ParallelNewBidirectionalAStarPathFinder(
-        DirectedGraphWeightFunction weightFunction,
-        HeuristicFunction heuristicFunction,
-        DirectedGraphNode source,
-        DirectedGraphNode target) {
+            AbstractGraphWeightFunction<N> weightFunction,
+            AbstractHeuristicFunction<N> heuristicFunction,
+            N source,
+            N target) {
         this.weightFunction = weightFunction;
         this.heuristicFunction = heuristicFunction;
         this.source = source;
@@ -51,8 +54,7 @@ public class ParallelNewBidirectionalAStarPathFinder extends PathFinder {
     }
     
     @Override
-    public List<DirectedGraphNode> search(DirectedGraphNode source, 
-                                          DirectedGraphNode target) {
+    public List<N> search(N source, N target) {
         Objects.requireNonNull(source, "The source node is null.");
         Objects.requireNonNull(target, "The target node is null.");
         
@@ -94,14 +96,14 @@ public class ParallelNewBidirectionalAStarPathFinder extends PathFinder {
         return null;
     }
     
-    private static class SearchThread extends Thread {
+    private static class SearchThread<N> extends Thread {
         
         protected volatile boolean finished;
         protected SearchThread brotherThread;
         protected AtomicLong bestPathAtomic;
-        protected Set<DirectedGraphNode> CLOSED;
+        protected Set<N> CLOSED;
         
-        SearchThread(AtomicLong bestPathAtomic, Set<DirectedGraphNode> CLOSED) {
+        SearchThread(AtomicLong bestPathAtomic, Set<N> CLOSED) {
             this.bestPathAtomic = bestPathAtomic;
             this.CLOSED = CLOSED;
         }
@@ -116,16 +118,16 @@ public class ParallelNewBidirectionalAStarPathFinder extends PathFinder {
         }
     }
     
-    private static final class ForwardSearchThread extends SearchThread {
-        private MinimumPriorityQueue<DirectedGraphNode> OPEN;
-        private DirectedGraphNode startNode;
+    private static final class ForwardSearchThread<N> extends SearchThread<N> {
+        private MinimumPriorityQueue<N> OPEN;
+        private N startNode;
         
-        private Set<DirectedGraphNode> CLOSED = new HashSet<>();
+        private Set<N> CLOSED = new HashSet<>();
         
-        ForwardSearchThread(MinimumPriorityQueue<DirectedGraphNode> queue,
-                            DirectedGraphNode startNode,
+        ForwardSearchThread(MinimumPriorityQueue<N> queue, 
+                            N startNode,
                             AtomicLong bestPathAtomic,
-                            Set<DirectedGraphNode> CLOSED) {
+                            Set<N> CLOSED) {
             super(bestPathAtomic, CLOSED);
             this.OPEN = queue == null ? new DaryHeap<>() : queue.spawn();
             this.startNode = startNode;
@@ -136,7 +138,7 @@ public class ParallelNewBidirectionalAStarPathFinder extends PathFinder {
             OPEN.add(startNode, MIN_PRIORITY);
             
             while (!finished) {
-                DirectedGraphNode current = OPEN.extractMinimum();
+                N current = OPEN.extractMinimum();
                 
                 if (!CLOSED.contains(current)) {
                     
@@ -152,16 +154,16 @@ public class ParallelNewBidirectionalAStarPathFinder extends PathFinder {
         }
     }
     
-    private static final class BackwardSearchThread extends SearchThread {
-        private MinimumPriorityQueue<DirectedGraphNode> OPEN;
-        private DirectedGraphNode startNode;
+    private static final class BackwardSearchThread<N> extends SearchThread<N> {
+        private MinimumPriorityQueue<N> OPEN;
+        private N startNode;
         
         private Set<DirectedGraphNode> CLOSED = new HashSet<>();
         
-        BackwardSearchThread(MinimumPriorityQueue<DirectedGraphNode> queue,
-                             DirectedGraphNode startNode,
+        BackwardSearchThread(MinimumPriorityQueue<N> queue,
+                             N startNode,
                              AtomicLong bestPathAtomic,
-                             Set<DirectedGraphNode> CLOSED) {
+                             Set<N> CLOSED) {
             super(bestPathAtomic, CLOSED);
             this.OPEN = queue == null ? new DaryHeap<>() : queue.spawn();
             this.startNode = startNode;
@@ -172,7 +174,7 @@ public class ParallelNewBidirectionalAStarPathFinder extends PathFinder {
             OPEN.add(startNode, MIN_PRIORITY);
             
             while (!finished) {
-                DirectedGraphNode current = OPEN.extractMinimum();
+                N current = OPEN.extractMinimum();
                 
                 if (!CLOSED.contains(current)) {
                     

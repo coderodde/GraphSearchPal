@@ -6,9 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import net.coderodde.gsp.model.DirectedGraphNode;
-import net.coderodde.gsp.model.DirectedGraphWeightFunction;
-import net.coderodde.gsp.model.HeuristicFunction;
+import net.coderodde.gsp.model.support.DirectedGraphNode;
+import net.coderodde.gsp.model.support.DirectedGraphWeightFunction;
+import net.coderodde.gsp.model.AbstractHeuristicFunction;
 
 /**
  * This class provides miscellaneous utility stuff.
@@ -79,7 +79,7 @@ public class Utils {
     }
     
     public static final class GraphHeuristicFunction 
-    implements HeuristicFunction {
+    extends AbstractHeuristicFunction<DirectedGraphNode> {
 
         private final Map<DirectedGraphNode, Point2D.Double> map =
                 new HashMap<>();
