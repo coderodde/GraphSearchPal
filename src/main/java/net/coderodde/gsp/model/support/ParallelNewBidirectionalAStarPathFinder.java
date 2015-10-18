@@ -1,12 +1,13 @@
 package net.coderodde.gsp.model.support;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.Semaphore;
 import net.coderodde.gsp.model.AbstractGraphNode;
 import net.coderodde.gsp.model.AbstractGraphWeightFunction;
 import net.coderodde.gsp.model.AbstractHeuristicFunction;
@@ -64,21 +65,31 @@ extends AbstractPathFinder<N> {
                                                            target).search();
     }
     
-    private List<DirectedGraphNode> search() {
-        AtomicLong bestPathAtomic = new AtomicLong();
-        Set<DirectedGraphNode> CLOSED = 
-                Collections.<DirectedGraphNode>
-                newSetFromMap(new ConcurrentHashMap<>());
-        bestPathAtomic.set(Double.doubleToLongBits(Double.POSITIVE_INFINITY));
+    private List<N> search() {
+        MinimumPriorityQueue<N> OPEN = getQueue() == null ?
+                                       new DaryHeap<>() :
+                                       getQueue().spawn();
         
-        SearchThread forwardThread = new ForwardSearchThread(getQueue(),
-                                                             source,
-                                                             bestPathAtomic,
-                                                             CLOSED);
-        SearchThread backwardThread = new BackwardSearchThread(getQueue(),
-                                                               target,
-                                                               bestPathAtomic,
-                                                               CLOSED);
+        Set<N> CLOSED = Collections.<N>newSetFromMap(new ConcurrentHashMap<>());
+        PathLengthHolder<N> pathLengthHolder = new PathLengthHolder<>();
+        
+        SearchThread<N> forwardThread = 
+                new ForwardSearchThread<>(OPEN.spawn(),
+                                          CLOSED,
+                                          weightFunction,
+                                          heuristicFunction,
+                                          pathLengthHolder,
+                                          source,
+                                          target);
+        
+        SearchThread<N> backwardThread = 
+                new BackwardSearchThread(OPEN.spawn(),
+                                         CLOSED,
+                                         weightFunction,
+                                         heuristicFunction,
+                                         pathLengthHolder,
+                                         source,
+                                         target);
         
         forwardThread.setBrotherThread(backwardThread);
         backwardThread.setBrotherThread(forwardThread);
@@ -93,19 +104,45 @@ extends AbstractPathFinder<N> {
             return null;
         }
         
-        return null;
+        N touchNode = pathLengthHolder.getTouchNode();
+        
+        if (touchNode == null) {
+            return Collections.<N>emptyList();
+        }
+   
+        return tracebackPath(touchNode,
+                             forwardThread.getParentMap(),
+                             backwardThread.getParentMap());
     }
     
-    private static class SearchThread<N> extends Thread {
+    private static class SearchThread<N extends AbstractGraphNode<N>> 
+    extends Thread {
         
         protected volatile boolean finished;
+        protected volatile double F;
         protected SearchThread brotherThread;
-        protected AtomicLong bestPathAtomic;
-        protected Set<N> CLOSED;
+        protected MinimumPriorityQueue<N> OPEN;
+        protected final Set<N> CLOSED;
+        protected final Map<N, N> PARENTS = new HashMap<>();
+        protected final Map<N, Double> DISTANCE = new HashMap<>();
+        protected final AbstractHeuristicFunction<N> heuristicFunction;
+        protected final AbstractGraphWeightFunction<N> weightFunction;
+        protected final PathLengthHolder<N> pathLengthHolder;
+        protected final N source;
+        protected final N target;
         
-        SearchThread(AtomicLong bestPathAtomic, Set<N> CLOSED) {
-            this.bestPathAtomic = bestPathAtomic;
+        SearchThread(Set<N> CLOSED, 
+                     AbstractHeuristicFunction<N> heuristicFunction,
+                     AbstractGraphWeightFunction<N> weightFunction,
+                     PathLengthHolder<N> pathLengthHolder,
+                     N source,
+                     N target) {
             this.CLOSED = CLOSED;
+            this.heuristicFunction = heuristicFunction;
+            this.weightFunction = weightFunction;
+            this.pathLengthHolder = pathLengthHolder;
+            this.source = source;
+            this.target = target;
         }
         
         void setBrotherThread(SearchThread brotherThread) {
@@ -116,62 +153,101 @@ extends AbstractPathFinder<N> {
             finished = true;
             brotherThread.finished = true;
         }
+        
+        double getF() {
+            return F;
+        }
+        
+        Map<N, N> getParentMap() {
+            return PARENTS;
+        }
     }
     
-    private static final class ForwardSearchThread<N> extends SearchThread<N> {
-        private MinimumPriorityQueue<N> OPEN;
-        private N startNode;
+    private static final class 
+            ForwardSearchThread<N extends AbstractGraphNode<N>> 
+    extends SearchThread<N> {
         
-        private Set<N> CLOSED = new HashSet<>();
-        
-        ForwardSearchThread(MinimumPriorityQueue<N> queue, 
-                            N startNode,
-                            AtomicLong bestPathAtomic,
-                            Set<N> CLOSED) {
-            super(bestPathAtomic, CLOSED);
+        ForwardSearchThread(MinimumPriorityQueue<N> queue,
+                            Set<N> CLOSED,
+                            AbstractGraphWeightFunction<N> weightFunction,
+                            AbstractHeuristicFunction<N> heuristicFunction,
+                            PathLengthHolder<N> pathLengthHolder,
+                            N source,
+                            N target) {
+            
+            super(CLOSED, 
+                  heuristicFunction, 
+                  weightFunction,
+                  pathLengthHolder, 
+                  source, 
+                  target);
+            
             this.OPEN = queue == null ? new DaryHeap<>() : queue.spawn();
-            this.startNode = startNode;
+            this.F = heuristicFunction.estimate(source, target);
         }
         
         @Override
         public void run() {
-            OPEN.add(startNode, MIN_PRIORITY);
+            F = heuristicFunction.estimate(source, target);
+            DISTANCE.put(source, 0.0);
+            PARENTS.put(source, null);
+            OPEN.add(source, F);
             
             while (!finished) {
                 N current = OPEN.extractMinimum();
                 
-                if (!CLOSED.contains(current)) {
-                    
+                if (CLOSED.contains(current)) {
+                    continue;
                 }
                 
-                if (!OPEN.isEmpty()) {
-                    //...
-                } else {
-                    brotherThread.finish();
-                    break;
+                double f = DISTANCE.get(current) + 
+                           heuristicFunction.estimate(current, target);
+                double L = pathLengthHolder.read();
+                double tmp = DISTANCE.get(current) + 
+                             brotherThread.getF() - 
+                             heuristicFunction.estimate(current, source);
+                
+                if (f < L && tmp < L) {
+                    for (N child : current.children()) {
+                        if (CLOSED.contains(child)) {
+                            continue;
+                        }
+                        
+                        double tentativeScore = DISTANCE.get(current) + 
+                                                weightFunction.get(current, 
+                                                                   child);
+                    }
                 }
             }
         }
     }
     
-    private static final class BackwardSearchThread<N> extends SearchThread<N> {
-        private MinimumPriorityQueue<N> OPEN;
-        private N startNode;
-        
-        private Set<DirectedGraphNode> CLOSED = new HashSet<>();
+    private static final class 
+            BackwardSearchThread<N extends AbstractGraphNode<N>> 
+    extends SearchThread<N> {
         
         BackwardSearchThread(MinimumPriorityQueue<N> queue,
-                             N startNode,
-                             AtomicLong bestPathAtomic,
-                             Set<N> CLOSED) {
-            super(bestPathAtomic, CLOSED);
+                             Set<N> CLOSED,
+                             AbstractGraphWeightFunction<N> weightFunction,
+                             AbstractHeuristicFunction<N> heuristicFunction,
+                             PathLengthHolder<N> pathLengthHolder,
+                             N source,
+                             N target) {
+            super(CLOSED, 
+                  heuristicFunction, 
+                  weightFunction,
+                  pathLengthHolder, 
+                  source, 
+                  target);
+            
             this.OPEN = queue == null ? new DaryHeap<>() : queue.spawn();
-            this.startNode = startNode;
+            this.F = heuristicFunction.estimate(source, target);
         }
         
         @Override
         public void run() {
-            OPEN.add(startNode, MIN_PRIORITY);
+            F = heuristicFunction.estimate(source, target);
+            OPEN.add(target, F);
             
             while (!finished) {
                 N current = OPEN.extractMinimum();
@@ -187,6 +263,32 @@ extends AbstractPathFinder<N> {
                     break;
                 }
             }
+        }
+    }
+    
+    private static final class PathLengthHolder<N> {
+        
+        private final Semaphore mutex = new Semaphore(1);
+        private volatile double length = Double.POSITIVE_INFINITY;
+        private N touchNode;
+        
+        double read() {
+            return length;
+        }
+        
+        void tryUpdate(double length, N touchNode) {
+            mutex.acquireUninterruptibly();
+            
+            if (this.length > length) {
+                this.length = length;
+                this.touchNode = touchNode;
+            }
+            
+            mutex.release();
+        }
+        
+        N getTouchNode() {
+            return touchNode;
         }
     }
 }

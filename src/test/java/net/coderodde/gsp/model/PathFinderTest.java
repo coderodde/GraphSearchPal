@@ -1,11 +1,7 @@
 package net.coderodde.gsp.model;
 
 import net.coderodde.gsp.model.support.DirectedGraphNode;
-import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import net.coderodde.gsp.Utils.GraphData;
 import static net.coderodde.gsp.Utils.choose;
