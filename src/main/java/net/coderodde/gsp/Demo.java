@@ -8,6 +8,8 @@ import net.coderodde.gsp.Utils.GraphData;
 import static net.coderodde.gsp.Utils.choose;
 import static net.coderodde.gsp.Utils.getPathLength;
 import static net.coderodde.gsp.Utils.getRandomGraphData;
+import static net.coderodde.gsp.Utils.title;
+import net.coderodde.gsp.model.AbstractGraphWeightFunction;
 import net.coderodde.gsp.model.support.DirectedGraphNode;
 import net.coderodde.gsp.model.support.DirectedGraphWeightFunction;
 import net.coderodde.gsp.model.queue.MinimumPriorityQueue;
@@ -19,12 +21,15 @@ import net.coderodde.gsp.model.support.DijkstraPathFinder;
 import net.coderodde.gsp.model.support.GridHeuristicFunction;
 import net.coderodde.gsp.model.support.NewBidirectionalAStarPathFinder;
 import net.coderodde.gsp.model.support.ParallelNewBidirectionalAStarPathFinder;
+import net.coderodde.gsp.model.support.PuzzleGraphHeuristicFunction;
+import net.coderodde.gsp.model.support.PuzzleGraphNode;
 
 public class Demo {
-
+    
     public static void main(String[] args) {
-        demoGridGraph();
-        demoGeneralGraph();
+        demoPuzzleGraph();
+//        demoGridGraph();
+//        demoGeneralGraph();
     }
     
     private static DirectedGraphNode getSource(GraphData data) {
@@ -325,5 +330,86 @@ public class Demo {
                 getPathLength(path6, data2.weightFunction));
         
         System.out.println();
+    }
+    
+    private static void demoPuzzleGraph() {
+        title("Puzzle graph demo");
+        long seed = 1445181731661L; System.currentTimeMillis();
+        Random random = new Random(seed);
+        System.out.println("Seed: " + seed);
+        
+        PuzzleGraphNode target = new PuzzleGraphNode(4);
+        PuzzleGraphNode source = getSource(70, random);
+        
+        PuzzleGraphWeightFunction weightFunction = 
+                new PuzzleGraphWeightFunction();
+        
+        PuzzleGraphHeuristicFunction heuristicFunction =
+                new PuzzleGraphHeuristicFunction(source.getDegree());
+        
+        long startTime = System.currentTimeMillis();
+        List<PuzzleGraphNode> path1 = 
+                new NewBidirectionalAStarPathFinder<>(weightFunction,
+                                                      heuristicFunction)
+                        .search(source, target);
+        long endTime = System.currentTimeMillis();
+        
+        System.out.println("NewBidirectionalAStarPathFidner in " + 
+                           (endTime - startTime) + " milliseconds.");
+        System.out.println("Path length: " + path1.size());
+        
+        startTime = System.currentTimeMillis();
+        List<PuzzleGraphNode> path2 = 
+                new ParallelNewBidirectionalAStarPathFinder<>(weightFunction,
+                                                              heuristicFunction)
+                        .search(source, target);
+        endTime = System.currentTimeMillis();
+        
+        System.out.println("ParallelNewBidirectionalAStarPathFidner in " + 
+                           (endTime - startTime) + " milliseconds.");
+        System.out.println("Path length: " + path2.size());
+    }
+    
+    private static PuzzleGraphNode getSource(int steps, Random rnd) {
+        PuzzleGraphNode node = new PuzzleGraphNode(4);
+        steps += steps % 2;
+        
+        while (steps > 0) {
+            PuzzleGraphNode tmp;
+            double d = rnd.nextDouble();
+            
+            if (d < 0.25) {
+                tmp = node.moveDown();
+            } else if (d < 0.5) {
+                tmp = node.moveLeft();
+            } else if (d < 0.75) {
+                tmp = node.moveRight();
+            } else {
+                tmp = node.moveUp();
+            }
+            
+            if (tmp != null) {
+                --steps;
+                node = tmp;
+            }
+        }
+        
+        return node;
+    }
+    
+    private static final class PuzzleGraphWeightFunction 
+    extends AbstractGraphWeightFunction<PuzzleGraphNode> {
+
+        @Override
+        public void put(PuzzleGraphNode tail, 
+                        PuzzleGraphNode head, 
+                        double weight) {
+            
+        }
+
+        @Override
+        public double get(PuzzleGraphNode tail, PuzzleGraphNode head) {
+            return 1.0;
+        }
     }
 }

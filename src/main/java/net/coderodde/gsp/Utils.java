@@ -18,6 +18,8 @@ import net.coderodde.gsp.model.AbstractHeuristicFunction;
  */
 public class Utils {
     
+    private static final int CONSOLE_WIDTH = 80;
+    
     public static double 
         getPathLength(List<DirectedGraphNode> path,
                       DirectedGraphWeightFunction weightFunction) {
@@ -99,5 +101,28 @@ public class Utils {
             Point2D.Double pb = map.get(target);
             return pa.distance(pb);
         }
+    }
+    
+    public static void title(String titleText) {
+        title(titleText, '-');
+    }
+    
+    private static void title(String titleText, char barChar) {
+        StringBuilder sb = new StringBuilder(CONSOLE_WIDTH);
+        int i = CONSOLE_WIDTH - 2 - titleText.length();
+        int leftChars = i / 2;
+        int rightChars = CONSOLE_WIDTH - 2 - titleText.length() - leftChars;
+        
+        for (int j = 0; j < leftChars; ++j) {
+            sb.append(barChar);
+        }
+        
+        sb.append(' ').append(titleText).append(' ');
+        
+        for (int j = 0; j < rightChars; ++j) {
+            sb.append(barChar);
+        }
+        
+        System.out.println(sb.toString());
     }
 }
