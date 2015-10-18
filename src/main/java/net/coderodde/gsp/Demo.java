@@ -28,8 +28,8 @@ public class Demo {
     
     public static void main(String[] args) {
         demoPuzzleGraph();
-//        demoGridGraph();
-//        demoGeneralGraph();
+        demoGridGraph();
+        demoGeneralGraph();
     }
     
     private static DirectedGraphNode getSource(GraphData data) {
@@ -154,6 +154,8 @@ public class Demo {
     }
     
     private static void demoGridGraph() {
+        title("Grid graph demo");
+        
         long seed = System.currentTimeMillis();
         Random random = new Random(seed);
         GridGraphData data = createGridGraph(400, 400);
@@ -242,6 +244,8 @@ public class Demo {
     }
     
     private static void demoGeneralGraph() {
+        title("General graph demo");
+        
         long seed = System.currentTimeMillis();
         Random random = new Random(seed);
         
@@ -334,12 +338,12 @@ public class Demo {
     
     private static void demoPuzzleGraph() {
         title("Puzzle graph demo");
-        long seed = 1445181731661L; System.currentTimeMillis();
+        long seed = System.currentTimeMillis();
         Random random = new Random(seed);
         System.out.println("Seed: " + seed);
         
         PuzzleGraphNode target = new PuzzleGraphNode(4);
-        PuzzleGraphNode source = getSource(70, random);
+        PuzzleGraphNode source = getSource(50, random);
         
         PuzzleGraphWeightFunction weightFunction = 
                 new PuzzleGraphWeightFunction();
