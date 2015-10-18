@@ -9,7 +9,7 @@ My aim is to come up with a definitive collection of pathfinding algorithms + mi
 - [x] A*
 - [x] Bidirectional A*
 - [x] New Bidirectional A* (NBA*) [1]
-- [x] Parallel Bidirectional A* (PNBA*)[2], (works as expected on large graphs, yet fails on jUnit tests)
+- [x] Parallel Bidirectional A* (PNBA*) [2], (works as expected on large graphs, yet fails on jUnit tests)
 
 ### Priority queues 
 
