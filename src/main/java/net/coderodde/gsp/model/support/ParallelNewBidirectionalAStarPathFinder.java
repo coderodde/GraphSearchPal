@@ -1,5 +1,6 @@
 package net.coderodde.gsp.model.support;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -58,6 +59,12 @@ extends AbstractPathFinder<N> {
     public List<N> search(N source, N target) {
         Objects.requireNonNull(source, "The source node is null.");
         Objects.requireNonNull(target, "The target node is null.");
+        
+        if (source.equals(target)) {
+            List<N> path = new ArrayList<>(1);
+            path.add(source);
+            return path;
+        }
         
         return new ParallelNewBidirectionalAStarPathFinder(weightFunction,
                                                            heuristicFunction,
@@ -121,7 +128,7 @@ extends AbstractPathFinder<N> {
         protected volatile boolean finished;
         protected volatile double F;
         protected SearchThread brotherThread;
-        protected MinimumPriorityQueue<N> OPEN;
+        protected final MinimumPriorityQueue<N> OPEN;
         protected final Set<N> CLOSED;
         protected final Map<N, N> PARENTS = new HashMap<>();
         protected final Map<N, Double> DISTANCE = new HashMap<>();
@@ -131,18 +138,24 @@ extends AbstractPathFinder<N> {
         protected final N source;
         protected final N target;
         
-        SearchThread(Set<N> CLOSED, 
+        SearchThread(MinimumPriorityQueue<N> OPEN,
+                     Set<N> CLOSED, 
                      AbstractHeuristicFunction<N> heuristicFunction,
                      AbstractGraphWeightFunction<N> weightFunction,
                      PathLengthHolder<N> pathLengthHolder,
                      N source,
                      N target) {
+            this.OPEN = OPEN;
             this.CLOSED = CLOSED;
             this.heuristicFunction = heuristicFunction;
             this.weightFunction = weightFunction;
             this.pathLengthHolder = pathLengthHolder;
             this.source = source;
             this.target = target;
+        }
+        
+        SearchThread<N> getBrotherThread() {
+            return this.brotherThread;
         }
         
         void setBrotherThread(SearchThread brotherThread) {
@@ -161,13 +174,17 @@ extends AbstractPathFinder<N> {
         Map<N, N> getParentMap() {
             return PARENTS;
         }
+        
+        Map<N, Double> getDistanceMap() {
+            return DISTANCE;
+        }
     }
     
     private static final class 
             ForwardSearchThread<N extends AbstractGraphNode<N>> 
     extends SearchThread<N> {
         
-        ForwardSearchThread(MinimumPriorityQueue<N> queue,
+        ForwardSearchThread(MinimumPriorityQueue<N> OPEN,
                             Set<N> CLOSED,
                             AbstractGraphWeightFunction<N> weightFunction,
                             AbstractHeuristicFunction<N> heuristicFunction,
@@ -175,22 +192,20 @@ extends AbstractPathFinder<N> {
                             N source,
                             N target) {
             
-            super(CLOSED, 
+            super(OPEN,
+                  CLOSED, 
                   heuristicFunction, 
                   weightFunction,
                   pathLengthHolder, 
                   source, 
                   target);
-            
-            this.OPEN = queue == null ? new DaryHeap<>() : queue.spawn();
-            this.F = heuristicFunction.estimate(source, target);
         }
         
         @Override
         public void run() {
             F = heuristicFunction.estimate(source, target);
-            DISTANCE.put(source, 0.0);
             PARENTS.put(source, null);
+            DISTANCE.put(source, 0.0);
             OPEN.add(source, F);
             
             while (!finished) {
@@ -216,8 +231,59 @@ extends AbstractPathFinder<N> {
                         double tentativeScore = DISTANCE.get(current) + 
                                                 weightFunction.get(current, 
                                                                    child);
+                        
+                        if (!DISTANCE.containsKey(child)) {
+                            DISTANCE.put(child, tentativeScore);
+                            PARENTS.put(child, current);
+                            OPEN.add(child, 
+                                     tentativeScore + 
+                                     heuristicFunction.estimate(child, target));
+                            
+                            Map<N, Double> OTHER_DISTANCE = getBrotherThread()
+                                                           .getDistanceMap();
+                            
+                            Double g2 = OTHER_DISTANCE.get(child);
+                            
+                            if (g2 != null) {
+                                double tmpDist = g2 + DISTANCE.get(child);
+                                
+                                if (pathLengthHolder.read() > tmpDist) {
+                                    pathLengthHolder.tryUpdate(tmpDist, child);
+                                }
+                            }
+                        } else if (DISTANCE.get(child) > tentativeScore) {
+                            DISTANCE.put(child, tentativeScore);
+                            PARENTS.put(child, current);
+                            OPEN.decreasePriority(
+                                     child,
+                                     tentativeScore +
+                                     heuristicFunction.estimate(child, target));
+                            
+                            Map<N, Double> OTHER_DISTANCE = getBrotherThread()
+                                                           .getDistanceMap();
+                            
+                            Double g2 = OTHER_DISTANCE.get(child);
+                            
+                            if (g2 != null) {
+                                double tmpDist = g2 + DISTANCE.get(child);
+                                
+                                if (pathLengthHolder.read() > tmpDist) {
+                                    pathLengthHolder.tryUpdate(tmpDist, child);
+                                }
+                            }
+                        }
                     }
+                    
+                    CLOSED.add(current);
                 }
+                
+                if (OPEN.isEmpty()) {
+                    finish();
+                    return;
+                }
+                
+                this.F = DISTANCE.get(OPEN.min()) + 
+                         heuristicFunction.estimate(OPEN.min(), target);
             }
         }
     }
@@ -226,42 +292,109 @@ extends AbstractPathFinder<N> {
             BackwardSearchThread<N extends AbstractGraphNode<N>> 
     extends SearchThread<N> {
         
-        BackwardSearchThread(MinimumPriorityQueue<N> queue,
+        BackwardSearchThread(MinimumPriorityQueue<N> OPEN,
                              Set<N> CLOSED,
                              AbstractGraphWeightFunction<N> weightFunction,
                              AbstractHeuristicFunction<N> heuristicFunction,
                              PathLengthHolder<N> pathLengthHolder,
                              N source,
                              N target) {
-            super(CLOSED, 
+            super(OPEN,
+                  CLOSED, 
                   heuristicFunction, 
                   weightFunction,
                   pathLengthHolder, 
                   source, 
                   target);
             
-            this.OPEN = queue == null ? new DaryHeap<>() : queue.spawn();
             this.F = heuristicFunction.estimate(source, target);
         }
         
         @Override
         public void run() {
             F = heuristicFunction.estimate(source, target);
+            PARENTS.put(target, null);
+            DISTANCE.put(target, 0.0);
             OPEN.add(target, F);
             
             while (!finished) {
                 N current = OPEN.extractMinimum();
                 
-                if (!CLOSED.contains(current)) {
-                    
+                if (CLOSED.contains(current)) {
+                    continue;
                 }
                 
-                if (!OPEN.isEmpty()) {
-                    //...
-                } else {
-                    brotherThread.finish();
-                    break;
+                double f = DISTANCE.get(current) + 
+                           heuristicFunction.estimate(current, source);
+                double L = pathLengthHolder.read();
+                double tmp = DISTANCE.get(current) + 
+                             brotherThread.getF() - 
+                             heuristicFunction.estimate(current, target);
+                
+                if (f < L && tmp < L) {
+                    for (N parent : current.parents()) {
+                        if (CLOSED.contains(parent)) {
+                            continue;
+                        }
+                        
+                        double tentativeScore = DISTANCE.get(current) + 
+                                                weightFunction.get(parent, 
+                                                                   current);
+                        
+                        if (!DISTANCE.containsKey(parent)) {
+                            DISTANCE.put(parent, tentativeScore);
+                            PARENTS.put(parent, current);
+                            OPEN.add(parent, 
+                                     tentativeScore + 
+                                     heuristicFunction.estimate(parent, 
+                                                                source));
+                            
+                            Map<N, Double> OTHER_DISTANCE = getBrotherThread()
+                                                           .getDistanceMap();
+                            
+                            Double g2 = OTHER_DISTANCE.get(parent);
+                            
+                            if (g2 != null) {
+                                double tmpDist = g2 + DISTANCE.get(parent);
+                                
+                                if (pathLengthHolder.read() > tmpDist) {
+                                    pathLengthHolder.tryUpdate(tmpDist, parent);
+                                }
+                            }
+                        } else if (DISTANCE.get(parent) > tentativeScore) {
+                            DISTANCE.put(parent, tentativeScore);
+                            PARENTS.put(parent, current);
+                            OPEN.decreasePriority(
+                                     parent,
+                                     tentativeScore +
+                                     heuristicFunction.estimate(parent, 
+                                                                source));
+                            
+                            Map<N, Double> OTHER_DISTANCE = getBrotherThread()
+                                                           .getDistanceMap();
+                            
+                            Double g2 = OTHER_DISTANCE.get(parent);
+                            
+                            if (g2 != null) {
+                                double tmpDist = g2 + DISTANCE.get(parent);
+                                
+                                if (pathLengthHolder.read() > tmpDist) {
+                                    pathLengthHolder.tryUpdate(tmpDist, parent);
+                                }
+                            }
+                        }
+                    }
+                    
+                    CLOSED.add(current);
                 }
+                
+                if (OPEN.isEmpty()) {
+                    finish();
+                    return;
+                }
+                
+                this.F = DISTANCE.get(OPEN.min()) + 
+                         heuristicFunction.estimate(OPEN.min(), target);
             }
         }
     }
