@@ -8,8 +8,8 @@ My aim is to come up with a definitive collection of pathfinding algorithms + mi
 - [x] Bidirectional Dijkstra's algorithm
 - [x] A*
 - [x] Bidirectional A*
-- [x] New Bidirectional A* (NBA*) by Henk Post and Wim Pijls
-- [x] Parallel Bidirectional A* (PNBA*) by Luis Henrique Oliveira and Luiz Chaimowicz (works fast on large graphs, yet has some issues when jUnit tested)
+- [x] New Bidirectional A* (NBA*) [1]
+- [x] Parallel Bidirectional A* (PNBA*)[2], (works as expected on large graphs, yet fails on jUnit tests)
 
 ### Priority queues 
 
@@ -17,3 +17,7 @@ My aim is to come up with a definitive collection of pathfinding algorithms + mi
 - [x] `DaryHeap`: this is the generalization of a binary heap (`d = 2`) that allows `d` children for each element in the heap.
 - [x] `FibonacciHeap`
 - [x] `PairingHeap`
+
+### References
+* [1] Pijls, Wim and Post, Henk: _Yet another bidirectional algorithm for shortest paths_
+* [2] Rios, Luis Henrique Oliveira and Chaimowicz, Luiz: _A Parallel Bidirectional Heuristic Search Algorithm_
