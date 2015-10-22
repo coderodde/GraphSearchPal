@@ -343,7 +343,7 @@ public class Demo {
         System.out.println("Seed: " + seed);
         
         PuzzleGraphNode target = new PuzzleGraphNode(4);
-        PuzzleGraphNode source = getSource(50, random);
+        PuzzleGraphNode source = getSource(60, random);
         
         PuzzleGraphWeightFunction weightFunction = 
                 new PuzzleGraphWeightFunction();
@@ -358,7 +358,7 @@ public class Demo {
                         .search(source, target);
         long endTime = System.currentTimeMillis();
         
-        System.out.println("NewBidirectionalAStarPathFidner in " + 
+        System.out.println("NewBidirectionalAStarPathFinder in " + 
                            (endTime - startTime) + " milliseconds.");
         System.out.println("Path length: " + path1.size());
         
@@ -372,6 +372,18 @@ public class Demo {
         System.out.println("ParallelNewBidirectionalAStarPathFidner in " + 
                            (endTime - startTime) + " milliseconds.");
         System.out.println("Path length: " + path2.size());
+        
+        startTime = System.currentTimeMillis();
+        List<PuzzleGraphNode> path3 = 
+                new BidirectionalDijkstraPathFinder<>(weightFunction)
+                        .search(source, target);
+        endTime = System.currentTimeMillis();
+        
+        System.out.println("BidirectionalDijkstraPathFinder in " + 
+                           (endTime - startTime) + " milliseconds.");
+        System.out.println("Path length: " + path3.size());
+        
+        System.out.println();
     }
     
     private static PuzzleGraphNode getSource(int steps, Random rnd) {

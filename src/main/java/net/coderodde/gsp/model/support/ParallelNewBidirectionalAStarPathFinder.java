@@ -209,6 +209,11 @@ extends AbstractPathFinder<N> {
             OPEN.add(source, F);
             
             while (!finished) {
+                if (OPEN.isEmpty()) {
+                    finish();
+                    return;
+                }
+                
                 N current = OPEN.extractMinimum();
                 
                 if (CLOSED.contains(current)) {
@@ -318,6 +323,11 @@ extends AbstractPathFinder<N> {
             OPEN.add(target, F);
             
             while (!finished) {
+                if (OPEN.isEmpty()) {
+                    finish();
+                    return;
+                }
+                
                 N current = OPEN.extractMinimum();
                 
                 if (CLOSED.contains(current)) {

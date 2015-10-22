@@ -12,8 +12,10 @@ public class GraphPal {
     
     private static final String VERSION = "1.6 - alpha_1";
     private final JFrame frame;
+    private final GraphPanel panel;
     
     public GraphPal() {
         this.frame = new JFrame("Graph Search Pal " + VERSION);
+        this.panel = new GraphPanel();
     }
 }

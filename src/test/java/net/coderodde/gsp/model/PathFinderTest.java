@@ -20,9 +20,9 @@ public class PathFinderTest {
     
     @Test
     public void test() {
-        long seed = 1445179004251L; System.currentTimeMillis();
+        long seed = System.currentTimeMillis();
         Random random = new Random(seed);
-        GraphData data = getRandomGraphData(10, 40, random);
+        GraphData data = getRandomGraphData(10000, 50000, random);
         
         AbstractPathFinder[] finders = new AbstractPathFinder[6];
         
