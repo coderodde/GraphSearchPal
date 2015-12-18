@@ -27,9 +27,10 @@ import net.coderodde.gsp.model.support.PuzzleGraphNode;
 public class Demo {
     
     public static void main(String[] args) {
-        demoPuzzleGraph();
-        demoGridGraph();
-        demoGeneralGraph();
+        new GraphPal();
+//        demoPuzzleGraph();
+//        demoGridGraph();
+//        demoGeneralGraph();
     }
     
     private static DirectedGraphNode getSource(GraphData data) {

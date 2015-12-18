@@ -17,6 +17,7 @@ import net.coderodde.gsp.model.queue.MinimumPriorityQueue;
  */
 public abstract class AbstractPathFinder<N extends AbstractGraphNode<N>> {
     
+    protected GraphSearchListener<N> listener;
     protected MinimumPriorityQueue<N> queue;
     
     /**
@@ -34,7 +35,11 @@ public abstract class AbstractPathFinder<N extends AbstractGraphNode<N>> {
     public MinimumPriorityQueue<N> getQueue() {
         return queue;
     }
-        
+     
+    public void setGraphSearchListener(GraphSearchListener<N> listener) {
+        this.listener = listener;
+    }
+    
     public AbstractPathFinder<N> setQueue(MinimumPriorityQueue<N> queue) {
         this.queue = queue;
         return this;

@@ -61,6 +61,10 @@ extends AbstractPathFinder<N> {
                     DISTANCE.put(child, tentativeCost);
                     PARENTS.put(child, current);
                     OPEN.add(child, tentativeCost);
+                    
+                    if (listener != null) {
+                        listener.reached(child);
+                    }
                 } else if (DISTANCE.get(child) > tentativeCost) {
                     DISTANCE.put(child, tentativeCost);
                     PARENTS.put(child, current);
@@ -71,18 +75,39 @@ extends AbstractPathFinder<N> {
     }
     
     private List<N> search() {
+        if (listener != null) {
+            listener.begin();
+        }
+        
         while (!OPEN.isEmpty()) {
             N current = OPEN.extractMinimum();
             
             if (current.equals(target)) {
+                List<N> path = tracebackPath(current, PARENTS);
+                
+                if (listener != null) {
+                    listener.done(path);
+                }
+                
                 return tracebackPath(current, PARENTS);
             }
             
             CLOSED.add(current);
+            
+            if (listener != null) {
+                listener.closed(current);
+            }
+            
             expand(current);
         }
             
-        return Collections.<N>emptyList();
+        List<N> emptyPath = Collections.<N>emptyList();
+        
+        if (listener != null) {
+            listener.done(emptyPath);
+        }
+        
+        return emptyPath;
     }
     
     @Override

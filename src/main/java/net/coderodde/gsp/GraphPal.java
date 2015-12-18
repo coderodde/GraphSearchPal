@@ -1,6 +1,10 @@
 package net.coderodde.gsp;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import javax.swing.JFrame;
+import net.coderodde.gsp.model.AbstractPathFinder;
+import net.coderodde.gsp.model.support.DirectedGraphNode;
 
 /**
  * This class manages the main frame of Graph Search Pal.
@@ -17,5 +21,15 @@ public class GraphPal {
     public GraphPal() {
         this.frame = new JFrame("Graph Search Pal " + VERSION);
         this.panel = new GraphPanel();
+        System.out.println("fds");
+        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        this.frame.getContentPane().add(panel);
+        this.frame.setVisible(true);
+    }
+    
+    public void runShortestPathFinder(
+            AbstractPathFinder<DirectedGraphNode> finder) {
+        
     }
 }
