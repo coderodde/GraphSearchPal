@@ -19,8 +19,8 @@ public class DirectedGraphNode extends AbstractGraphNode<DirectedGraphNode> {
     private final Set<DirectedGraphNode> childrenWrapper;
     private final Set<DirectedGraphNode> parentWrapper;
     
-    public DirectedGraphNode(String name) {
-        super(name);
+    public DirectedGraphNode(int id) {
+        super(id);
         
         this.children = new LinkedHashSet<>();
         this.parents  = new LinkedHashSet<>();
@@ -52,7 +52,7 @@ public class DirectedGraphNode extends AbstractGraphNode<DirectedGraphNode> {
     
     @Override
     public String toString() {
-        return "[" + name + "]";
+        return "[DirectedGraphNode " + id + "]";
     }
 
     @Override

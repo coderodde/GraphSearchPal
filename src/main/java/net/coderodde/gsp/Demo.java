@@ -1,5 +1,6 @@
 package net.coderodde.gsp;
 
+import net.coderodde.gsp.gui.GraphPalApp;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.util.List;
@@ -27,7 +28,7 @@ import net.coderodde.gsp.model.support.PuzzleGraphNode;
 public class Demo {
     
     public static void main(String[] args) {
-        new GraphPal();
+        new GraphPalApp();
 //        demoPuzzleGraph();
 //        demoGridGraph();
 //        demoGeneralGraph();

@@ -1,4 +1,4 @@
-package net.coderodde.gsp;
+package net.coderodde.gsp.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -17,8 +18,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.JPanel;
+import net.coderodde.gsp.gui.data.ProgressListener;
 import net.coderodde.gsp.model.GraphSearchListener;
 import net.coderodde.gsp.model.support.DirectedGraphNode;
+import net.coderodde.gsp.model.support.UndirectedGraphNode;
+import net.coderodde.gsp.model.support.UndirectedGraphWeightFunction;
 
 /**
  * This class implements the panel used for displaying the graph search progress
@@ -27,8 +31,8 @@ import net.coderodde.gsp.model.support.DirectedGraphNode;
  * @author Rodion "rodde" Efremov
  * @version 1.6
  */
-public class GraphPanel extends JPanel 
-implements GraphSearchListener<DirectedGraphNode> {
+public class GraphPalPanel extends JPanel 
+implements GraphSearchListener<UndirectedGraphNode> {
    
     /**
      * The default color for the nodes that are not walls.
@@ -65,11 +69,17 @@ implements GraphSearchListener<DirectedGraphNode> {
      */
     private static final Color DEFAULT_PATH_COLOR = Color.BLUE;
     
-    private final DirectedGraphNode[][] graph;
-    private final Set<DirectedGraphNode> wallNodeSet;
-    private final Set<DirectedGraphNode> openNodeSet;
-    private final Set<DirectedGraphNode> closedNodeSet;
-    private final Map<DirectedGraphNode, Point> nodesToCoordinatesMap;
+    /**
+     * The cost of diagonal edges.
+     */
+    private static final double SQRT2 = Math.sqrt(2.0);
+    
+    private final UndirectedGraphNode[][] graph;
+    private final Set<UndirectedGraphNode> wallNodeSet;
+    private final Set<UndirectedGraphNode> openNodeSet;
+    private final Set<UndirectedGraphNode> closedNodeSet;
+    private final Map<UndirectedGraphNode, Point> nodesToCoordinatesMap;
+    private final UndirectedGraphWeightFunction weightFunction;
     
     private Color nonWallColor = DEFAULT_NON_WALL_COLOR;
     private Color wallColor    = DEFAULT_WALL_COLOR;
@@ -83,12 +93,12 @@ implements GraphSearchListener<DirectedGraphNode> {
     
     private List<DirectedGraphNode> path;
     
-    public GraphPanel() {
+    public GraphPalPanel() {
         Dimension screenDimension = Toolkit.getDefaultToolkit().getScreenSize();
-        this.graph = new DirectedGraphNode[screenDimension.height]
-                                          [screenDimension.width];
-        this.wallNodeSet = new HashSet<>(screenDimension.height *
-                                         screenDimension.width);
+        this.graph = new UndirectedGraphNode[screenDimension.height]
+                                            [screenDimension.width];
+        this.wallNodeSet = new LinkedHashSet<>(screenDimension.height *
+                                               screenDimension.width);
         this.openNodeSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
         this.closedNodeSet = 
                 Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -98,17 +108,56 @@ implements GraphSearchListener<DirectedGraphNode> {
         StringBuilder sb = new StringBuilder();
         Random random = new Random();
         
+        int id = 0;
+        
         for (int y = 0; y < graph.length; ++y) {
             for (int x = 0; x < graph[0].length; ++x) {
                 sb.delete(0, sb.length());
                 sb.append(nodeId++);
-                DirectedGraphNode node = new DirectedGraphNode(sb.toString());
+                UndirectedGraphNode node = new UndirectedGraphNode(id++);
                 graph[y][x] = node;
                 nodesToCoordinatesMap.put(node, new Point(x, y));
                 
                 if (random.nextFloat() < 0.01f) {
                     wallNodeSet.add(node);
                 }
+            }
+        }
+        
+        this.weightFunction = new UndirectedGraphWeightFunction();
+        initializeWeightFunction(screenDimension);
+    }
+    
+    private void initializeWeightFunction(Dimension screenDimension) {
+        int width = screenDimension.width;
+        int height = screenDimension.height;
+        
+        // Create weights for horizontal edges.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width - 1; ++x) {
+                weightFunction.put(graph[y][x], graph[y][x + 1], 1.0);
+            }
+        }
+        
+        // Create weights for vertical edges.
+        for (int x = 0; x < width; ++x) {
+            for (int y = 0; y < height - 1; ++y) {
+                weightFunction.put(graph[y][x], graph[y + 1][x], 1.0);
+            }
+        }
+        
+        // Create weights for diagonal (\) edges.
+        for (int y = 0; y < height - 1; ++y) {
+            for (int x = 0; x < width - 1; ++x) {
+                weightFunction.put(graph[y][x], graph[y + 1][x + 1], SQRT2);
+            }
+        }
+        
+        
+        // Create weights for diagonal (/) edges.
+        for (int y = 0; y < height - 1; ++y) {
+            for (int x = 1; x < width; ++x) {
+                weightFunction.put(graph[y][x], graph[y + 1][x - 1], SQRT2);
             }
         }
     }
@@ -161,12 +210,22 @@ implements GraphSearchListener<DirectedGraphNode> {
         imgg.setColor(nonWallColor);
         imgg.fillRect(0, 0, width, height);
         
-        for (DirectedGraphNode node : wallNodeSet) {
+        for (UndirectedGraphNode node : wallNodeSet) {
             Point point = nodesToCoordinatesMap.get(node);
             
             if (point.x < width && point.y < height) {
                 image.setRGB(point.x, point.y, wallColor.getRGB());
             }
+        }
+        
+        for (UndirectedGraphNode node : closedNodeSet) {
+            Point point = nodesToCoordinatesMap.get(node);
+            image.setRGB(point.x, point.y, closedColor.getRGB());
+        }
+        
+        for (UndirectedGraphNode node : openNodeSet) {
+            Point point = nodesToCoordinatesMap.get(node);
+            image.setRGB(point.x, point.y, openColor.getRGB());
         }
         
         g.drawImage(image, 0, 0, this);
@@ -180,17 +239,17 @@ implements GraphSearchListener<DirectedGraphNode> {
     }
 
     @Override
-    public void reached(DirectedGraphNode node) {
-        
+    public void reached(UndirectedGraphNode node) {
+        openNodeSet.add(node);
     }
 
     @Override
-    public void closed(DirectedGraphNode node) {
-    
+    public void closed(UndirectedGraphNode node) {
+        closedNodeSet.add(node);
     }
 
     @Override
-    public void done(List<DirectedGraphNode> path) {
-    
+    public void done(List<UndirectedGraphNode> path) {
+        System.out.println("Yeah!");
     }
 }

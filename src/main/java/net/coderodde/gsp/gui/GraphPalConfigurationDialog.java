@@ -1,5 +1,6 @@
-package net.coderodde.gsp;
+package net.coderodde.gsp.gui;
 
+import net.coderodde.gsp.gui.GraphPalApp;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
@@ -13,18 +14,18 @@ import net.coderodde.gsp.model.support.DijkstraPathFinder;
  * @author Rodion "rodde" Efremov
  * @version 1.6 (Dec 18, 2015)
  */
-public class ConfigurationDialog extends JDialog {
+public class GraphPalConfigurationDialog extends JDialog {
    
-    private GraphPal pal;
+    private GraphPalApp pal;
     private final JButton searchButton = new JButton("Search");
     
-    public ConfigurationDialog() {
+    public GraphPalConfigurationDialog() {
         this.setTitle("Configuration");
         this.getContentPane().add(searchButton);
         searchButton.addActionListener(new SearchActionListener());
     }
     
-    public void setGraphPal(GraphPal pal) {
+    public void setGraphPal(GraphPalApp pal) {
         this.pal = pal;
     }
     
@@ -32,8 +33,8 @@ public class ConfigurationDialog extends JDialog {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            pal.runShortestPathFinder(
-                    new DijkstraPathFinder<>(pal.getWeightFunction()));
+//            pal.runShortestPathFinder(
+//                    new DijkstraPathFinder<>(pal.getWeightFunction()));
         }
     }
 }

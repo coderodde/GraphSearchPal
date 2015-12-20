@@ -8,13 +8,14 @@ import java.util.Set;
  * 
  * @author Rodion "rodde" Efremov
  * @version 1.6 (Oct 18, 2015)
+ * @param <N> the actual graph node implementation type.
  */
 public abstract class AbstractGraphNode<N extends AbstractGraphNode<N>> {
-    protected final String name;
     
-    public AbstractGraphNode(String name) {
-        Objects.requireNonNull(name, "The node name is null.");
-        this.name = name;
+    protected final int id;
+    
+    public AbstractGraphNode(int id) {
+        this.id = id;
     }
     
     /**
@@ -55,7 +56,7 @@ public abstract class AbstractGraphNode<N extends AbstractGraphNode<N>> {
     
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return Integer.hashCode(id);
     }   
     
     @Override
@@ -68,6 +69,6 @@ public abstract class AbstractGraphNode<N extends AbstractGraphNode<N>> {
             return false;
         }
         
-        return name.equals(((N) o).name);
+        return id == ((N) o).id;
     }
 }

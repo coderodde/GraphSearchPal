@@ -37,7 +37,7 @@ public class PuzzleGraphNode extends AbstractGraphNode<PuzzleGraphNode> {
      * @param degree the degree of the node.
      */
     public PuzzleGraphNode(final int degree) {
-        super("");
+        super(0);
         
         checkDegree(degree);
         
@@ -63,7 +63,7 @@ public class PuzzleGraphNode extends AbstractGraphNode<PuzzleGraphNode> {
      * @param copy the node to copy.
      */
     private PuzzleGraphNode(PuzzleGraphNode copy) {
-        super("");
+        super(0);
         
         this.degree = copy.degree;
         this.matrix = new byte[degree][degree];
