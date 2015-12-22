@@ -8,4 +8,5 @@ public interface ProgressListener {
     
     public void init(int tokens, String description);
     public void add(int tokens);
+    public void set(int tokens);
 }

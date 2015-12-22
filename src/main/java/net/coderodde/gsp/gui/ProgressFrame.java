@@ -34,6 +34,8 @@ public class ProgressFrame extends JFrame implements ProgressListener {
         this.getContentPane().add(cancelButton);
         
         this.pack();
+        
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
     
     public void addCancelButtonListener(ActionListener listener) {
@@ -63,13 +65,16 @@ public class ProgressFrame extends JFrame implements ProgressListener {
     public void init(int tokens, String description) {
         descriptionLabel.setText(description);
         progressBar.setMaximum(tokens);
+        progressBar.setMinimum(0);
         progressBar.setValue(0);
-        repaint();
     }
 
     @Override
     public void add(int tokens) {
         progressBar.setValue(progressBar.getValue() + tokens);
-        repaint();
+    }
+    
+    public void set(int tokens) {
+        progressBar.setValue(tokens);
     }
 }

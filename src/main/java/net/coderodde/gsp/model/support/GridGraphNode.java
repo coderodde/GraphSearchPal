@@ -23,11 +23,27 @@ public class GridGraphNode extends AbstractGraphNode<GridGraphNode> {
     private GridGraphNode southWest;
     private GridGraphNode northWest;
     
+    private final int x;
+    private final int y;
+    
     private final GridGraphConfiguration configuration;
     
-    public GridGraphNode(int id, GridGraphConfiguration configuration) {
+    public GridGraphNode(int id, 
+                         int x, 
+                         int y, 
+                         GridGraphConfiguration configuration) {
         super(id);
+        this.x = x;
+        this.y = y;
         this.configuration = configuration;
+    }
+    
+    public int getX() {
+        return x;
+    }
+    
+    public int getY() {
+        return y;
     }
     
     public void setNorth(GridGraphNode north) {

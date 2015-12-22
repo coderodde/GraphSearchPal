@@ -6,6 +6,7 @@ import java.awt.Toolkit;
 import javax.swing.JFrame;
 import net.coderodde.gsp.model.AbstractPathFinder;
 import net.coderodde.gsp.model.support.DijkstraPathFinder;
+import net.coderodde.gsp.model.support.GridGraphConfiguration;
 import net.coderodde.gsp.model.support.UndirectedGraphNode;
 
 /**
@@ -27,7 +28,7 @@ public class GraphPalApp {
         
         this.frame = new JFrame("Graph Search Pal " + VERSION);
         this.frame.setSize(screenDimension);
-        this.panel = new GraphPalPanel(progressFrame);
+        this.panel = new GraphPalPanel();
         
         GraphPalPanelMouseMotionListener motionListener = 
                 new GraphPalPanelMouseMotionListener(this.panel);
@@ -45,23 +46,34 @@ public class GraphPalApp {
         System.out.println("Screen size: " + dim);
         System.out.println("Width:  " + panel.getWidth());
         System.out.println("Height: " + panel.getHeight());
+       
+        GridGraphConfiguration configuration = new GridGraphConfiguration();
         
-        AbstractPathFinder<UndirectedGraphNode> finder =
-                new DijkstraPathFinder<>(panel.getWeightFunction());
+        panel.setProgressFrame(progressFrame);
+        panel.createGridGraph(panel.getWidth(),
+                              panel.getHeight(),
+                              configuration);
+        System.out.println("fdsafdsa");
+                              
+        panel.getWallBrush().setHeight(40);
+        panel.getWallBrush().setWidth(40);
         
-        finder.setGraphSearchListener(panel);
-        
-        panel.runSearch(panel.getNode(20, 20),
-                        panel.getNode(400, 400),
-                        finder);
-        
-        try {
-            for (int i = 10; i > 0; --i) {
-                System.out.println("fds " + i);
-                Thread.sleep(1000L);
-            }
-        } catch (InterruptedException ex) {
-            
-        }
+//        AbstractPathFinder<UndirectedGraphNode> finder =
+//                new DijkstraPathFinder<>(panel.getWeightFunction());
+//        
+//        finder.setGraphSearchListener(panel);
+//        
+//        panel.runSearch(panel.getNode(20, 20),
+//                        panel.getNode(400, 400),
+//                        finder);
+//        
+//        try {
+//            for (int i = 10; i > 0; --i) {
+//                System.out.println("fds " + i);
+//                Thread.sleep(1000L);
+//            }
+//        } catch (InterruptedException ex) {
+//            
+//        }
     }
 }

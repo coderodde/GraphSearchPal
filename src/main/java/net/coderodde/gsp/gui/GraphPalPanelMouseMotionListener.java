@@ -19,9 +19,8 @@ class GraphPalPanelMouseMotionListener implements MouseMotionListener {
     
     @Override
     public void mouseDragged(MouseEvent e) {
-        panel.setAsWall(e.getX(), e.getY());
+        panel.setNodeAsWall(e.getX(), e.getY());
         panel.repaint();
-        System.out.println("yeahh");
     }
 
     @Override
