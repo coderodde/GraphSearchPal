@@ -59,6 +59,8 @@ public class GraphPalApp {
         panel.getWallBrush().setHeight(40);
         panel.getWallBrush().setWidth(40);
         
+        new GraphPalConfigurationFrame();
+        
 //        AbstractPathFinder<UndirectedGraphNode> finder =
 //                new DijkstraPathFinder<>(panel.getWeightFunction());
 //        
