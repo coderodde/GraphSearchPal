@@ -20,6 +20,8 @@ public abstract class AbstractPathFinder<N extends AbstractGraphNode<N>> {
     protected GraphSearchListener<N> listener;
     protected MinimumPriorityQueue<N> queue;
     
+    public abstract String humanReadableName();
+    
     /**
      * Performs a shortest path search from {@code source} to {@code target} 
      * using {@code weightFunction} as a weight function.

@@ -59,7 +59,22 @@ public class GraphPalApp {
         panel.getWallBrush().setHeight(40);
         panel.getWallBrush().setWidth(40);
         
-        new GraphPalConfigurationFrame();
+        new GraphPalConfigurationFrame(
+                new String[]{ 
+                    "Dijkstra",
+                    "Bidirectional Dijkstra",
+                    "A*",
+                    "BHPA",
+                    "NBA*",
+                    "Parallel NBA*"
+                },
+                new String[]{
+                    "d-ary",
+                    "Binomial",
+                    "Fibonacci",
+                    "Pairing"
+                }
+        );
         
 //        AbstractPathFinder<UndirectedGraphNode> finder =
 //                new DijkstraPathFinder<>(panel.getWeightFunction());

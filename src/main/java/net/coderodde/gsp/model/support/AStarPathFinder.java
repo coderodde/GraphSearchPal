@@ -106,4 +106,9 @@ extends AbstractPathFinder<N> {
             
         return Collections.<N>emptyList();
     }
+
+    @Override
+    public String humanReadableName() {
+        return "A*";
+    }
 }

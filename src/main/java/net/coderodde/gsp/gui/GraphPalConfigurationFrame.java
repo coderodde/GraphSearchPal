@@ -2,9 +2,11 @@ package net.coderodde.gsp.gui;
 
 import java.awt.GridLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import net.coderodde.gsp.model.support.DijkstraPathFinder;
 
 /**
  * This class implements a window for configuration controls.
@@ -44,16 +46,22 @@ public final class GraphPalConfigurationFrame extends JFrame {
     private final Labels labels = new Labels();
     private final Panels panels = new Panels();
     
-    public GraphPalConfigurationFrame() {
+    public GraphPalConfigurationFrame(String[] algorithmNames,
+                                      String[] heapNames) {
         super(TITLE);
         
         this.setLayout(new GridLayout(6, 1));
         
-        panels.algorithmPanel.setLayout(new GridLayout(2, 2));
+        panels.algorithmPanel.setLayout(new GridLayout(2, 2, 10, 10));
         panels.algorithmPanel.add(labels.algorithmChoiceLabel);
-        panels.algorithmPanel.add(new JButton("FDs"));
+        
+        JComboBox algorithmBox = new JComboBox(algorithmNames);
+        panels.algorithmPanel.add(algorithmBox);
+        
         panels.algorithmPanel.add(labels.heapChoiceLabel);
-        panels.algorithmPanel.add(new JButton("FSFDSFD"));
+        
+        JComboBox heapBox = new JComboBox(heapNames);
+        panels.algorithmPanel.add(heapBox);
         
         this.getContentPane().add(panels.algorithmPanel);
         this.pack();

@@ -205,4 +205,9 @@ extends AbstractPathFinder<N> {
                 Collections.<N>emptyList() :
                 tracebackPath(touchNode, PARENTSA, PARENTSB);
     }
+
+    @Override
+    public String humanReadableName() {
+        return "NBA*";
+    }
 }

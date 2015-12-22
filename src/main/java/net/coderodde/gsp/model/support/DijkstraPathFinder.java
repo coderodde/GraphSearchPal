@@ -123,4 +123,9 @@ extends AbstractPathFinder<N> {
         Objects.requireNonNull(target, "The target node is null.");
         return new DijkstraPathFinder(source, target, weightFunction, super.listener).search();
     }
+
+    @Override
+    public String humanReadableName() {
+        return "Dijkstra's algorithm";
+    }
 }

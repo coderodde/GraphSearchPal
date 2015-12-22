@@ -121,6 +121,11 @@ extends AbstractPathFinder<N> {
                              forwardThread.getParentMap(),
                              backwardThread.getParentMap());
     }
+
+    @Override
+    public String humanReadableName() {
+        return "Parallel NBA*";
+    }
     
     private static class SearchThread<N extends AbstractGraphNode<N>> 
     extends Thread {
