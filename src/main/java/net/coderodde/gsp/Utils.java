@@ -55,7 +55,7 @@ public class Utils {
                 new DirectedGraphWeightFunction();
         
         for (int i = 0; i < nodes; ++i) {
-            DirectedGraphNode node = new DirectedGraphNode("" + i);
+            DirectedGraphNode node = new DirectedGraphNode(i);
             graph.add(node);
             heuristicFunction
                     .put(node, 

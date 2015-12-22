@@ -10,6 +10,7 @@ import java.util.Set;
 import net.coderodde.gsp.model.AbstractGraphNode;
 import net.coderodde.gsp.model.AbstractGraphWeightFunction;
 import net.coderodde.gsp.model.AbstractPathFinder;
+import net.coderodde.gsp.model.GraphSearchListener;
 import net.coderodde.gsp.model.queue.MinimumPriorityQueue;
 import net.coderodde.gsp.model.queue.support.DaryHeap;
 
@@ -33,11 +34,13 @@ extends AbstractPathFinder<N> {
     public DijkstraPathFinder(AbstractGraphWeightFunction<N> weightFunction) {
         Objects.requireNonNull(weightFunction, "The weight function is null.");
         this.weightFunction = weightFunction;
+        this.listener = null;
     }
     
     private DijkstraPathFinder(N source,
                                N target,
-                               AbstractGraphWeightFunction<N> weightFunction) {
+                               AbstractGraphWeightFunction<N> weightFunction,
+                               GraphSearchListener<N> listener) {
         OPEN = getQueue() == null ? new DaryHeap<>() : getQueue().spawn();
         CLOSED = new HashSet<>();
         PARENTS = new HashMap<>();
@@ -49,6 +52,7 @@ extends AbstractPathFinder<N> {
         
         this.target = target;
         this.weightFunction = weightFunction;
+        this.listener = listener;
     }
     
     private void expand(N current) {
@@ -79,11 +83,14 @@ extends AbstractPathFinder<N> {
             listener.begin();
         }
         
+        System.out.println("Dijkstra!" + (listener != null));
+        
         while (!OPEN.isEmpty()) {
             N current = OPEN.extractMinimum();
             
             if (current.equals(target)) {
                 List<N> path = tracebackPath(current, PARENTS);
+                System.out.println(listener);
                 
                 if (listener != null) {
                     listener.done(path);
@@ -114,6 +121,6 @@ extends AbstractPathFinder<N> {
     public List<N> search(N source, N target) {
         Objects.requireNonNull(source, "The source node is null.");
         Objects.requireNonNull(target, "The target node is null.");
-        return new DijkstraPathFinder(source, target, weightFunction).search();
+        return new DijkstraPathFinder(source, target, weightFunction, super.listener).search();
     }
 }

@@ -3,14 +3,10 @@ package net.coderodde.gsp.gui;
 import net.coderodde.gsp.gui.GraphPalPanel;
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import javax.swing.JFrame;
-import net.coderodde.gsp.gui.data.DataModel;
 import net.coderodde.gsp.model.AbstractPathFinder;
 import net.coderodde.gsp.model.support.DijkstraPathFinder;
-import net.coderodde.gsp.model.support.DirectedGraphNode;
-import net.coderodde.gsp.model.support.DirectedGraphWeightFunction;
+import net.coderodde.gsp.model.support.UndirectedGraphNode;
 
 /**
  * This class manages the main frame of Graph Search Pal.
@@ -23,6 +19,7 @@ public class GraphPalApp {
     private static final String VERSION = "1.6 - alpha_1";
     private final JFrame frame;
     private final GraphPalPanel panel;
+    private final ProgressFrame progressFrame = new ProgressFrame();
     
     public GraphPalApp() {
         Dimension screenDimension = 
@@ -30,44 +27,41 @@ public class GraphPalApp {
         
         this.frame = new JFrame("Graph Search Pal " + VERSION);
         this.frame.setSize(screenDimension);
-        this.panel = new GraphPalPanel();
+        this.panel = new GraphPalPanel(progressFrame);
         
-//        this.dataModel = new DataModel(screenDimension.width,
-//                                       screenDimension.height,
-//                                       null);
+        GraphPalPanelMouseMotionListener motionListener = 
+                new GraphPalPanelMouseMotionListener(this.panel);
+        
+        this.panel.addMouseMotionListener(motionListener);
         
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         this.frame.getContentPane().add(panel);
+        this.frame.setResizable(false);
         this.frame.setVisible(true);
-    }
-    
-    public void runShortestPathFinder(
-            AbstractPathFinder<DirectedGraphNode> finder) {
-        this.panel.begin();
         
-//        DijkstraPathFinder finder = new DijkstraPathFinder();
-    }
-    
-    private static final class SearchThread extends Thread {
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
         
-        private final AbstractPathFinder<DirectedGraphNode> finder;
-        private final DirectedGraphNode source;
-        private final DirectedGraphNode target;
+        System.out.println("Screen size: " + dim);
+        System.out.println("Width:  " + panel.getWidth());
+        System.out.println("Height: " + panel.getHeight());
         
-        SearchThread(AbstractPathFinder<DirectedGraphNode> finder,
-                     DirectedGraphNode source,
-                     DirectedGraphNode target,
-                     DirectedGraphWeightFunction weightFunction) {
-            this.finder = finder;
-            this.source = source;
-            this.target = target;
-        }
+        AbstractPathFinder<UndirectedGraphNode> finder =
+                new DijkstraPathFinder<>(panel.getWeightFunction());
         
-        @Override
-        public void run() {
-            finder.search(source, target);
+        finder.setGraphSearchListener(panel);
+        
+        panel.runSearch(panel.getNode(20, 20),
+                        panel.getNode(400, 400),
+                        finder);
+        
+        try {
+            for (int i = 10; i > 0; --i) {
+                System.out.println("fds " + i);
+                Thread.sleep(1000L);
+            }
+        } catch (InterruptedException ex) {
+            
         }
     }
-    
 }

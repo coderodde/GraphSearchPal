@@ -31,9 +31,13 @@ public abstract class AbstractPathFinder<N extends AbstractGraphNode<N>> {
      *         {@code target} is not reachable from {@code source}.
      */
     public abstract List<N> search(N source, N target);
-       
+    
     public MinimumPriorityQueue<N> getQueue() {
         return queue;
+    }
+       
+    public GraphSearchListener<N> getGraphSearchListener() {
+        return listener;
     }
      
     public void setGraphSearchListener(GraphSearchListener<N> listener) {

@@ -96,12 +96,12 @@ public class Demo {
                 = new DirectedGraphWeightFunction();
         GridHeuristicFunction heuristicFunction = new GridHeuristicFunction();
         
+        int id = 0;
         Point point = new Point();
         
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
-                grid[y][x] = new DirectedGraphNode("(x = " + x + 
-                                                   ", y = " + y + ")");
+                grid[y][x] = new DirectedGraphNode(id);
                 point.x = x;
                 point.y = y;
                 heuristicFunction.put(grid[y][x], point);

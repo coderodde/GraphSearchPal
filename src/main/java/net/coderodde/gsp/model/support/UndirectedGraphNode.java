@@ -1,5 +1,6 @@
 package net.coderodde.gsp.model.support;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -41,12 +42,21 @@ extends AbstractGraphNode<UndirectedGraphNode> {
     }
 
     @Override
-    public Set<UndirectedGraphNode> children() {
+    public Collection<UndirectedGraphNode> children() {
         return childrenWrapper;
     }
 
     @Override
-    public Set<UndirectedGraphNode> parents() {
+    public Collection<UndirectedGraphNode> parents() {
         return childrenWrapper;
+    }
+
+    @Override
+    public void clear() {
+        for (UndirectedGraphNode neighbor : children) {
+            neighbor.children.remove(this);
+        }
+        
+        children.clear();
     }
 }

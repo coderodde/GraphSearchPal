@@ -480,4 +480,9 @@ public class PuzzleGraphNode extends AbstractGraphNode<PuzzleGraphNode> {
     public void removeChild(PuzzleGraphNode child) {
     
     }
+
+    @Override
+    public void clear() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

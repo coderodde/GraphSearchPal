@@ -1,5 +1,6 @@
 package net.coderodde.gsp.model;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 
@@ -45,14 +46,19 @@ public abstract class AbstractGraphNode<N extends AbstractGraphNode<N>> {
      * 
      * @return a view of child nodes.
      */
-    public abstract Set<N> children();
+    public abstract Collection<N> children();
     
     /**
      * Returns a set view of all the parent nodes of this node.
      * 
      * @return a view of parent nodes. 
      */
-    public abstract Set<N> parents();
+    public abstract Collection<N> parents();
+    
+    /**
+     * Removes all the edges incident on this node.
+     */
+    public abstract void clear();
     
     @Override
     public int hashCode() {

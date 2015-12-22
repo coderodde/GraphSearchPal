@@ -1,5 +1,6 @@
 package net.coderodde.gsp.model.support;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -41,12 +42,12 @@ public class DirectedGraphNode extends AbstractGraphNode<DirectedGraphNode> {
     }
     
     @Override
-    public Set<DirectedGraphNode> children() {
+    public Collection<DirectedGraphNode> children() {
         return childrenWrapper;
     }
     
     @Override
-    public Set<DirectedGraphNode> parents() {
+    public Collection<DirectedGraphNode> parents() {
         return parentWrapper;
     }
     
@@ -59,5 +60,19 @@ public class DirectedGraphNode extends AbstractGraphNode<DirectedGraphNode> {
     public void removeChild(DirectedGraphNode child) {
         child.parents.remove(this);
         children.remove(child);
+    }
+
+    @Override
+    public void clear() {
+        for (DirectedGraphNode child : children) {
+            child.parents.remove(this);
+        }
+        
+        for (DirectedGraphNode parent : parents) {
+            parent.children.remove(this);
+        }
+        
+        children.clear();
+        parents.clear();
     }
 }
