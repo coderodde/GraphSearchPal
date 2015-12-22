@@ -34,6 +34,7 @@ public class GraphPalApp {
                 new GraphPalPanelMouseMotionListener(this.panel);
         
         this.panel.addMouseMotionListener(motionListener);
+        this.panel.addMouseListener(motionListener);
         
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.frame.setExtendedState(JFrame.MAXIMIZED_BOTH);

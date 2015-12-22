@@ -93,6 +93,9 @@ implements GraphSearchListener<UndirectedGraphNode> {
     private boolean locked = false;
     private BufferedImage image;
     
+    private int endPointLength = 9;
+    private int omit = 3;
+    
     public void setProgressFrame(ProgressFrame progressFrame) {
         this.progressFrame = progressFrame;
     }
@@ -110,7 +113,29 @@ implements GraphSearchListener<UndirectedGraphNode> {
         Graphics g = image.getGraphics();
         g.setColor(nonWallColor);
         g.fillRect(0, 0, width, height);
+        
+        initializeSource();
+        initializeTarget();
+        
         repaint();
+    }
+    
+    private void initializeSource() {
+        sourcePoint.y = getHeight() >> 1;
+        sourcePoint.x = getWidth() / 3;
+    }
+    
+    private void initializeTarget() {
+        targetPoint.y = getHeight() >> 1;
+        targetPoint.x = 2 * getWidth() / 3;
+    }
+    
+    Point getSourcePoint() {
+        return sourcePoint;
+    }
+    
+    Point getTargetPoint() {
+        return targetPoint;
     }
     
     public WallBrush getWallBrush() {
@@ -234,9 +259,22 @@ implements GraphSearchListener<UndirectedGraphNode> {
         update(g);
     }
     
+    private void drawEndPoint(Graphics g, Point point, Color color) {
+        g.setColor(color);
+        
+        int x = point.x;
+        int y = point.y;
+        
+        g.fillRect(x - 1, y - 4, 3, 9);
+        g.fillRect(x - 4, y - 1, 9, 3);
+        g.drawArc(x - 6, y - 6, 12, 12, 0, 360);
+    }
+    
     @Override
     public void update(Graphics g) {
         g.drawImage(image, 0, 0, this);
+        drawEndPoint(g, sourcePoint, sourceColor);
+        drawEndPoint(g, targetPoint, targetColor);
 //        g.setColor(Color.YELLOW);
 //        g.drawRect(100, 100, 300, 200);
 //        g.setColor(Color.blue);
