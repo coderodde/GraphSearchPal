@@ -3,6 +3,7 @@ package net.coderodde.gsp.gui;
 import net.coderodde.gsp.gui.GraphPalPanel;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.util.Scanner;
 import javax.swing.JFrame;
 import net.coderodde.gsp.model.AbstractPathFinder;
 import net.coderodde.gsp.model.support.DijkstraPathFinder;
@@ -20,9 +21,10 @@ public class GraphPalApp {
     private static final String VERSION = "1.6 - alpha_1";
     private final JFrame frame;
     private final GraphPalPanel panel;
-    private final ProgressFrame progressFrame = new ProgressFrame();
     
     public GraphPalApp() {
+        long startTime = System.currentTimeMillis();
+        
         Dimension screenDimension = 
                 Toolkit.getDefaultToolkit().getScreenSize();
         
@@ -50,31 +52,42 @@ public class GraphPalApp {
        
         GridGraphConfiguration configuration = new GridGraphConfiguration();
         
-        panel.setProgressFrame(progressFrame);
         panel.createGridGraph(panel.getWidth(),
                               panel.getHeight(),
                               configuration);
-        System.out.println("fdsafdsa");
-                              
-        panel.getWallBrush().setHeight(40);
-        panel.getWallBrush().setWidth(40);
         
-        new GraphPalConfigurationFrame(
-                new String[]{ 
-                    "Dijkstra",
-                    "Bidirectional Dijkstra",
-                    "A*",
-                    "BHPA",
-                    "NBA*",
-                    "Parallel NBA*"
-                },
-                new String[]{
-                    "d-ary",
-                    "Binomial",
-                    "Fibonacci",
-                    "Pairing"
-                }
-        );
+        long endTime = System.currentTimeMillis();
+        System.out.println("Init: " + (endTime - startTime) + " milliseconds.");
+                              
+        panel.getWallBrush().setHeight(20);
+        panel.getWallBrush().setWidth(20);
+        
+        Scanner scanner = new Scanner(System.in);
+        
+        System.out.println("type sumthing... ");
+        
+        scanner.next();
+        
+        System.out.println("Yiihaaa!");
+        
+        panel.runSearch(new DijkstraPathFinder(panel.getWeightFunction()));
+        
+//        new GraphPalConfigurationFrame(
+//                new String[]{ 
+//                    "Dijkstra",
+//                    "Bidirectional Dijkstra",
+//                    "A*",
+//                    "BHPA",
+//                    "NBA*",
+//                    "Parallel NBA*"
+//                },
+//                new String[]{
+//                    "d-ary",
+//                    "Binomial",
+//                    "Fibonacci",
+//                    "Pairing"
+//                }
+//        );
         
 //        AbstractPathFinder<UndirectedGraphNode> finder =
 //                new DijkstraPathFinder<>(panel.getWeightFunction());

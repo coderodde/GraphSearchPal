@@ -24,7 +24,7 @@ import net.coderodde.gsp.model.support.UndirectedGraphNode;
  * @version 1.6
  */
 public class GraphPalPanel extends JPanel 
-implements GraphSearchListener<UndirectedGraphNode> {
+implements GraphSearchListener<GridGraphNode> {
    
     /**
      * The default color for the nodes that are not walls.
@@ -61,15 +61,10 @@ implements GraphSearchListener<UndirectedGraphNode> {
      */
     private static final Color DEFAULT_PATH_COLOR = Color.BLUE;
     
-    /**
-     * The cost of diagonal edges.
-     */
-    private static final double SQRT2 = Math.sqrt(2.0);
-    
     private GridGraphConfiguration configuration;
     private GridGraphNode[][] graph;
-    private GridGraphWeightFunction weightFunction =
-            new GridGraphWeightFunction();
+    private final GridGraphWeightFunction weightFunction =
+              new GridGraphWeightFunction();
     
     private Set<GridGraphNode> openNodeSet;
     private Set<GridGraphNode> closedNodeSet;
@@ -89,15 +84,11 @@ implements GraphSearchListener<UndirectedGraphNode> {
     private Point sourcePoint = new Point();
     private Point targetPoint = new Point();
     
-    private ProgressFrame progressFrame;
     private boolean locked = false;
     private BufferedImage image;
     
-    private int endPointLength = 9;
-    private int omit = 3;
-    
-    public void setProgressFrame(ProgressFrame progressFrame) {
-        this.progressFrame = progressFrame;
+    public GridGraphWeightFunction getWeightFunction() {
+        return weightFunction;
     }
     
     public void createGridGraph(int width, 
@@ -142,6 +133,35 @@ implements GraphSearchListener<UndirectedGraphNode> {
         return wallBrush;
     }
     
+    public void runSearch(AbstractPathFinder<GridGraphNode> finder) {
+        finder.setGraphSearchListener(this);
+        
+        System.out.println("Begin!");
+        
+        Thread searchThread = new Thread() {
+          
+            @Override
+            public void run() {
+                GridGraphNode source = graph[sourcePoint.y][sourcePoint.x];
+                GridGraphNode target = graph[targetPoint.y][targetPoint.x];
+                finder.search(source, target);
+            }
+        };
+        
+        RepainterThread repainterThread = new RepainterThread(this, 100);
+        repainterThread.start();
+        searchThread.start();
+        
+        try {
+            searchThread.join();
+        } catch (InterruptedException ex) {
+            
+        }
+        
+        repainterThread.exit();
+        System.out.println("Done!");
+    }
+    
     private void createNodes(int width, int height) {
         graph = new GridGraphNode[height][width];
         
@@ -150,10 +170,6 @@ implements GraphSearchListener<UndirectedGraphNode> {
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 graph[y][x] = new GridGraphNode(id++, x, y, configuration);
-            }
-            
-            if (progressFrame != null) {
-                progressFrame.add(1);
             }
         }
     }
@@ -169,6 +185,8 @@ implements GraphSearchListener<UndirectedGraphNode> {
                    y - (wallBrushHeight >> 1),
                    wallBrushWidth,
                    wallBrushHeight);
+        
+        configuration.markAsWall(graph[y][x]);
         
         repaint();
     }
@@ -332,16 +350,47 @@ implements GraphSearchListener<UndirectedGraphNode> {
         
         System.out.println("yoooo!");
     }
-//    
-//    public UndirectedGraphNode getNode(int x, int y) {
-//        return graph[y][x];
-//    }
-//    
-//    public void setAsWall(int x, int y) {
-//        graph[y][x].clear();
-//        wallNodeSet.add(graph[y][x]);
-//    }
-//    
+
+    @Override
+    public void begin() {
+        int width = getWidth();
+        int height = getHeight();
+        
+        // Clear everything.
+        Graphics imgg = image.createGraphics();
+        imgg.setColor(nonWallColor);
+        imgg.fillRect(0, 0, width, height);
+        
+        int clr = wallColor.getRGB();
+        
+        // Draw the walls.
+        for (GridGraphNode wallNode : configuration.getWallNodeSet()) {
+            image.setRGB(wallNode.getX(), wallNode.getY(), clr);
+        }
+        
+        repaint();
+    }
+
+    @Override
+    public void reached(GridGraphNode node) {
+        // Just color a pizel. It's up to the client programmer to repain().
+        image.setRGB(node.getX(), node.getY(), openColor.getRGB());
+    }
+
+    @Override
+    public void closed(GridGraphNode node) {
+        image.setRGB(node.getX(), node.getY(), closedColor.getRGB());
+    }
+
+    @Override
+    public void done(List<GridGraphNode> path) {
+        for (GridGraphNode node : path) {
+            image.setRGB(node.getX(), node.getY(), pathColor.getRGB());
+        }
+        
+        repaint();
+    }
+    
     private final class SearchRunnerThread extends Thread {
         
         private final UndirectedGraphNode source;
@@ -362,27 +411,56 @@ implements GraphSearchListener<UndirectedGraphNode> {
         }
     }
     
-    @Override
-    public void begin() {
-        openNodeSet.clear();
-        closedNodeSet.clear();
-        repaint();
-    }
-
-    @Override
-    public void reached(UndirectedGraphNode node) {
-//        openNodeSet.add(node);
-    }
-
-    @Override
-    public void closed(UndirectedGraphNode node) {
-//        closedNodeSet.add(node);
-    }
-
-    @Override
-    public void done(List<UndirectedGraphNode> path) {
-        this.path.clear();
-//        this.path.addAll(path);
-        repaint();
+//    @Override
+//    public void begin() {
+//        openNodeSet.clear();
+//        closedNodeSet.clear();
+//        repaint();
+//    }
+//
+//    @Override
+//    public void reached(UndirectedGraphNode node) {
+////        openNodeSet.add(node);
+//    }
+//
+//    @Override
+//    public void closed(UndirectedGraphNode node) {
+////        closedNodeSet.add(node);
+//    }
+//
+//    @Override
+//    public void done(List<UndirectedGraphNode> path) {
+//        this.path.clear();
+////        this.path.addAll(path);
+//        repaint();
+//    }
+    static final class RepainterThread extends Thread {
+        
+        private volatile boolean exitRequested = false;
+        private final GraphPalPanel panel;
+        private final int sleepMilliseconds;
+        
+        RepainterThread(GraphPalPanel panel, int sleepMilliseconds) {
+            this.panel = panel;
+            this.sleepMilliseconds = sleepMilliseconds;
+        }
+        
+        @Override
+        public void run() {
+            while (!exitRequested) {
+                try {
+                    panel.repaint();
+                    Thread.sleep(sleepMilliseconds);
+                } catch (InterruptedException ex) {
+                    
+                }
+            }
+            
+            System.out.println("RepainterThread finished.");
+        }
+        
+        public void exit() {
+            exitRequested = true;
+        }
     }
 }

@@ -1,5 +1,6 @@
 package net.coderodde.gsp.model.support;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -25,6 +26,10 @@ public class GridGraphConfiguration {
     
     public boolean isWallNode(GridGraphNode node) {
         return wallNodeSet.contains(node);
+    }
+    
+    public Set<GridGraphNode> getWallNodeSet() {
+        return Collections.<GridGraphNode>unmodifiableSet(wallNodeSet);
     }
     
     public void clear() {
