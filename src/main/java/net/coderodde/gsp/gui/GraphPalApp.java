@@ -52,6 +52,8 @@ public class GraphPalApp {
        
         GridGraphConfiguration configuration = new GridGraphConfiguration();
         
+        configuration.setAllowDiagonals(false);
+        
         panel.createGridGraph(panel.getWidth(),
                               panel.getHeight(),
                               configuration);

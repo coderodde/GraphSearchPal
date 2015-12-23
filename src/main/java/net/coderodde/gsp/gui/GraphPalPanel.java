@@ -148,7 +148,7 @@ implements GraphSearchListener<GridGraphNode> {
             }
         };
         
-        RepainterThread repainterThread = new RepainterThread(this, 100);
+        RepainterThread repainterThread = new RepainterThread(this, 10);
         repainterThread.start();
         searchThread.start();
         
@@ -186,7 +186,16 @@ implements GraphSearchListener<GridGraphNode> {
                    wallBrushWidth,
                    wallBrushHeight);
         
-        configuration.markAsWall(graph[y][x]);
+        int startY = y - (wallBrushHeight >> 1);
+        int startX = x - (wallBrushWidth >> 1);
+        
+        for (int yy = startY; yy < startY + wallBrushHeight; ++yy) {
+            for (int xx = startX; xx < startX + wallBrushWidth; ++xx) {
+                configuration.markAsWall(graph[yy][xx]);
+            }
+        }
+        
+//        configuration.markAsWall(graph[y][x]);
         
         repaint();
     }
