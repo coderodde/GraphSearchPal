@@ -1,7 +1,6 @@
 package net.coderodde.gsp.gui;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
@@ -181,6 +180,9 @@ implements GraphSearchListener<GridGraphNode> {
         int wallBrushWidth  = wallBrush.getWidth();
         int wallBrushHeight = wallBrush.getHeight();
         
+        int width = getWidth();
+        int height = getHeight();
+        
         g.fillRect(x - (wallBrushWidth >> 1),
                    y - (wallBrushHeight >> 1),
                    wallBrushWidth,
@@ -191,6 +193,10 @@ implements GraphSearchListener<GridGraphNode> {
         
         for (int yy = startY; yy < startY + wallBrushHeight; ++yy) {
             for (int xx = startX; xx < startX + wallBrushWidth; ++xx) {
+                if (yy < 0 || y >= height || xx < 0 || x >= width) {
+                    continue;
+                }
+                
                 configuration.markAsWall(graph[yy][xx]);
             }
         }

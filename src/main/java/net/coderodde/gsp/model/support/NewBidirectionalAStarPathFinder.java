@@ -1,6 +1,7 @@
 package net.coderodde.gsp.model.support;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -72,10 +73,18 @@ extends AbstractPathFinder<N> {
         DISTANCEA.put(source, 0.0);
         DISTANCEB.put(target, 0.0);
         
+        if (listener != null) {
+            listener.begin();
+        }
+        
         while (!OPENA.isEmpty() && !OPENB.isEmpty()) {
             if (OPENA.size() < OPENB.size()) {   
                 N current = OPENA.extractMinimum();
                 CLOSED.add(current);
+                
+                if (listener != null) {
+                    listener.closed(current);
+                }
 
                 if (DISTANCEA.get(current) + 
                         heuristicFunction.estimate(current, target) -
@@ -103,6 +112,10 @@ extends AbstractPathFinder<N> {
                                       tentativeScore +
                                       heuristicFunction.estimate(child, target));
 
+                            if (listener != null) {
+                                listener.reached(child);
+                            }
+                            
                             if (DISTANCEB.containsKey(child)) {
                                 double pathLength = tentativeScore +
                                                     DISTANCEB.get(child);
@@ -141,6 +154,10 @@ extends AbstractPathFinder<N> {
             } else {
                 N current = OPENB.extractMinimum();
                 CLOSED.add(current);
+                
+                if (listener != null) {
+                    listener.closed(current);
+                }
 
                 if (DISTANCEB.get(current) + 
                         heuristicFunction.estimate(current, source) -
@@ -169,6 +186,10 @@ extends AbstractPathFinder<N> {
                                       tentativeScore +
                                       heuristicFunction.estimate(parent, source));
 
+                            if (listener != null) {
+                                listener.reached(parent);
+                            }
+                            
                             if (DISTANCEA.containsKey(parent)) {
                                 double pathLength = tentativeScore +
                                                     DISTANCEA.get(parent);
@@ -201,9 +222,19 @@ extends AbstractPathFinder<N> {
             }
         }
         
-        return touchNode == null ?
-                Collections.<N>emptyList() :
-                tracebackPath(touchNode, PARENTSA, PARENTSB);
+        List<N> path;
+        
+        if (touchNode == null) {
+            path = Collections.<N>emptyList();
+        } else {
+            path = tracebackPath(touchNode, PARENTSA, PARENTSB);
+        }
+        
+        if (listener != null) {
+            listener.done(Collections.<N>unmodifiableList(path));
+        }
+        
+        return path;
     }
 
     @Override

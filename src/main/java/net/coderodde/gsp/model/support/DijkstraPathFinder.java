@@ -83,8 +83,6 @@ extends AbstractPathFinder<N> {
             listener.begin();
         }
         
-        System.out.println("Dijkstra!" + (listener != null));
-        
         while (!OPEN.isEmpty()) {
             N current = OPEN.extractMinimum();
             
