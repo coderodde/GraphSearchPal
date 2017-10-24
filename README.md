@@ -1,3 +1,5 @@
+([`FunkyPathfinding`](https://github.com/coderodde/FunkyPathfinding) is so much better! :-)
+
 # GraphSearchPal
 An experimental/research GUI application for demonstrating pathfinding algorithms.
 
